@@ -1,0 +1,5 @@
+#ignoring the .tif files
+*.tif
+
+#ignoring Fall.mat
+Fall123835.mat
