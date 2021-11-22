@@ -32,8 +32,9 @@ classdef PlotSkew <handle
         txt                 %intresting indexes choosen by user
         ButtonH             %button for cell selection and plot
         ButtonC             %button for clustering
-        ButtonVL            %button for low variance filtering
-        ButtonK             %button for 
+        ButtonV             %button for variance filtering
+        ButtonVis           %button for visualizing cells
+        ButtonK             %button for keeping just the selected cells
         
         clusters            %cell array containg the index of cells belonging to clusters
         variance            %variance values for each cell
@@ -76,10 +77,8 @@ classdef PlotSkew <handle
                 app.skewlevel(1,s)=app.stat_cell{s}.skew;
             end
                 
-                
-            app.initImage
             
-            
+            app.initImage 
         end
         
         
@@ -100,7 +99,6 @@ classdef PlotSkew <handle
                     skewnessHandling(app)
                     
             end
-            
             
             
         end
@@ -132,16 +130,24 @@ classdef PlotSkew <handle
             set(get(hcb,'Title'),'String','Skewness')
             caxis([-2 middle]) 
             
+            addComponents(app)
+            
+        end
+        
+        function addComponents(app)
             %button to come back to the principal question box
             indietro(app,app.hFig);
             
             %text area for cell selection
             app.TextC=uicontrol('Parent',app.hFig,'Style','edit','Visible','on',...
-                'Position',[10,450,140,20],'String','#cell separated by a space','Units','Normalized',...
-                'CallBack',@(TextC,event) intrestingCells(app));
+                'Position',[10,450,140,20],'String','#cell separated by a space','Units','Normalized');
+                
+            app.ButtonVis=uicontrol('Parent',app.hFig,'Style','pushbutton','String','Visualize',...
+                'Position',[10,430,100,20],'Units','normalized','Visible','on',...
+                'CallBack',@(ButtonVis,event)intrestingCells(app));
             
             app.ButtonK=uicontrol('Parent',app.hFig,'Style','pushbutton','String','Keep this cells',...
-                'Position',[10,430,100,20],'Units','normalized','Visible','on',...
+                'Position',[10,410,100,20],'Units','normalized','Visible','on',...
                 'CallBack',@(ButtonK,event)keepCells(app));
 
             %Add text area for skewness level
@@ -159,11 +165,9 @@ classdef PlotSkew <handle
                 'CallBack',@(src,event)clusteringButton(app));
             
             %Add button for variance low filtering
-            app.ButtonVL=uicontrol('Parent',app.hFig,'Style','pushbutton','String','Variance filtering','Position',[280,20,100,20],'Units','normalized','Visible','on',...
-                'CallBack',@(src,event)varianceLow(app));
-            
+            app.ButtonV=uicontrol('Parent',app.hFig,'Style','pushbutton','String','Variance filtering','Position',[280,20,100,20],'Units','normalized','Visible','on',...
+                'CallBack',@(src,event)varianceFunct(app));
         end
-        
         
         function textChanged(app)
             %textChanged callback function for the text field dedicated to the
@@ -211,8 +215,27 @@ classdef PlotSkew <handle
 
         end
        
+        function varianceFunct(app)
+            type = questdlg('Variance Analysis', 'Choose the variance filtering type:', 'Low','High','Low');
+            %baseline elim
+            b=detrend(app.deltaFoFskew')';
+            b=app.deltaFoFskew-b;
+            deltaFoFbaseline=app.deltaFoFskew-b;
+
+            %variance calc
+            app.variance=var(deltaFoFbaseline');
+            
+            switch type
+                case 'Low'
+                    varianceLow(app)
+                case 'High'
+                    varianceHigh(app)
+            end
+        
+        end
+            
+            
         function varianceLow(app)
-            app.variance=var(app.deltaFoFskew');
             p25=prctile(app.variance,25);
             app.iL=find(app.variance<=p25); %to delete
             app.iLs2p=app.skewfilt_idx(app.iL,:)-1; %for the legend
@@ -288,6 +311,17 @@ classdef PlotSkew <handle
             
         end
         
+        function varianceHigh(app)
+
+            p80=prctile(app.variance,80);
+            iH=app.variance>p80;
+            s2pidx=app.skewfilt_idx(iH)-1;
+            %varH=varianza(idxH);
+            %skewH=app.skewlevel(iH);
+            app.TextC.String= join(string(s2pidx)',' '); 
+
+        end
+        
         function intrestingCells(app)
             delete(app.txt);
             app.txt=[];
@@ -305,7 +339,7 @@ classdef PlotSkew <handle
             end
 
             for n=1:length(indexes)
-               app.txt(n)=text(coords{n,1},coords{n,2},coords{n,3},'Color','k','FontSize',8,'FontWeight','bold');
+               app.txt(n)=text(coords{n,1},coords{n,2},coords{n,3},'Color','m','FontSize',8,'FontWeight','bold');
             end
             
             begindex=1;
@@ -322,7 +356,7 @@ classdef PlotSkew <handle
                     trace=traces(i,:);
                     plot(trace+i)
                     hold on
-                    text(length(trace)/2,i,coords{i,3},'Color','k','FontSize',8);
+                    text(length(trace)/2,i,coords{i,3},'Color','m','FontSize',8);
                     
                 end
                 begindex=endindex+1;
@@ -330,7 +364,6 @@ classdef PlotSkew <handle
         end
 
         function keepCells(app)
-            
             
             idxs2p=str2double(split(app.TextC.String,' '));
             if ~isnan(idxs2p)
