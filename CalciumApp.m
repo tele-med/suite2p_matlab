@@ -4,9 +4,9 @@ classdef CalciumApp <handle
     properties
         Frame           %Frame principale
         PanelBlack      %Pannello per il toolbox 
-        DrugFigure
-        SwiggleFigure
-        OptoFigure
+        Drug            %Drug class
+        Swing           %Swing class
+        Optogenetic     %Opto class
         
     end
     
@@ -16,20 +16,19 @@ classdef CalciumApp <handle
         %costruttore
         function app=CalciumApp
             
-            app.Frame=MainFrame; %Creo il Fraim con menù
+            app.Frame=MainFrame; %Creo il Frame con menù
             app.Frame.Figure.Position=[100 337 560 420];
             app.PanelBlack=BlackPanel(app.Frame); %Creo il Pannello del black frame elimination toolbox
             app.Frame.Figure.CloseRequestFcn = @(src,event)my_closereq(app);
            
             app.Frame.blackButton.ButtonPushedFcn=@(btn,event)openBlack(app); %callback per entrare nel black elimination toolbox
             app.Frame.drugButton.ButtonPushedFcn=@(btn,event)openDrug(app); %callback per Frame Drug Experiment
-            
+            app.Frame.swingButton.ButtonPushedFcn=@(btn,event)openSwing(app);
         end
             
             
         
         function openBlack(app)
-            app.PanelBlack.menuImport.Visible='on';
             app.PanelBlack.menuVisualizeStack.Visible='on';
             app.PanelBlack.menuROI.Visible='on';
             app.PanelBlack.PanelB.Visible='on';
@@ -37,10 +36,22 @@ classdef CalciumApp <handle
         
                 
         function openDrug(app)
-            app.DrugFigure=DrugClass;
+            app.Drug=DrugClass;
 
         end
          
+        function openSwing(app)
+            
+            [filename,pathname]=uigetfile('*.mat','Pick a "Fall.mat" file');
+            
+            prompt={'Enter the  neuropil correction factor value:'};
+            name='alpha factor';
+            numlines=1;
+            defaultanswer={'0.9'};
+            answer=inputdlg(prompt,name,numlines,defaultanswer);
+            app.Swing=PlotSkew([pathname,filename],str2double(answer{1}));
+            
+        end
         
         function my_closereq(app)
             
@@ -49,15 +60,14 @@ classdef CalciumApp <handle
         
             switch selection
                 
-                case 'OK'
-                   
+                case 'OK' 
                     delete(app.Frame.Figure)
                     delete(app.PanelBlack.MainFrame)
                     delete(app.PanelBlack.FrameROI)
                     close all
-                    delete(app.DrugFigure.Figure)
-                    delete(app.SwiggleFigure)
-                    delete(app.OptoFigure)
+                    %delete(app.DrugFigure.Figure)
+                    %delete(app.SwiggleFigure)
+                    %delete(app.OptoFigure)
                 case 'Cancel'
                     return
             end

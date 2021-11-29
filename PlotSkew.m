@@ -86,19 +86,19 @@ classdef PlotSkew <handle
             
             [image,type]=createImage(app.fileName);
             
-            switch type
-                case'cell masks'
-                    app.cells=image; %select cell masks
-                    showImage(app,app.cells);
-                case 'neuropil masks'
-                    app.neu=image; %select neuropil masks
-                    showImage(app,app.neu);
-                case 'skewness'
+%             switch type
+%                 case'cell masks'
+%                     app.cells=image; %select cell masks
+%                     showImage(app,app.cells);
+%                 case 'neuropil masks'
+%                     app.neu=image; %select neuropil masks
+%                     showImage(app,app.neu);
+%                 case 'skewness'
                     app.skew=image; %select skewness
                     app.s=image;
                     skewnessHandling(app)
-                    
-            end
+%                     
+%             end
             
             
         end
@@ -117,6 +117,7 @@ classdef PlotSkew <handle
         function skewnessHandling(app)
             %PLOTTING THE SKEWNESS IMAGE
             app.hFig=figure(2);
+            app.hFig.Name= 'Swing Cells Experiment';
             
             mymap=[[1 1 1];jet];
             maxSkew=round(max(max(app.skew)));

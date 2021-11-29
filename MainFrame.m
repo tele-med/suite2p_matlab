@@ -6,7 +6,6 @@ classdef MainFrame <handle
         Figure                  % Graphics handles 
         DrugFigure
         Panel
-      
         
         blackButton
         drugButton
