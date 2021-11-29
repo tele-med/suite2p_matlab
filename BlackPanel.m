@@ -5,18 +5,17 @@ classdef BlackPanel <handle
        PanelB
        buttonBack
        txaB
-       
-       menuImport
-       
-       menuVisualizeStack %menu per visulizzare i tif Stack
+              
+       menuVisualizeStack   %menu per visulizzare i tif Stack
         
+       menuHelp             %menù con tutta la spiegazione dei vari campi
        
-       menuROI      %menu per il ROI manager
+       menuROI              %menu per il ROI manager
        FrameROI
-       image_data   %cell con le 3 immagini prese a 2/5 3/5 e 4/5 della lunghezza totale
-       c            %circle
-       count        %numero di ROI aggiunti
-       listROI      %lista con tutte le aree degli ROI aggiunti
+       image_data           %cell con le 3 immagini prese a 2/5 3/5 e 4/5 della lunghezza totale
+       c                    %circle
+       count                %numero di ROI aggiunti
+       listROI              %lista con tutte le aree degli ROI aggiunti
        dropDown
        textROI
        
@@ -64,6 +63,12 @@ classdef BlackPanel <handle
            grid2.RowHeight = {22,22,22,22,22};
            grid2.ColumnWidth = {120,'1x'};
 
+           %Buttons for file and directory selection
+           buttonf = uibutton(grid2,'Text','Import File');
+           buttonf.ButtonPushedFcn = @(src,event)MenuSelection(app,'f',buttonf);
+           buttond = uibutton(grid2,'Text','Import Directory');
+           buttond.ButtonPushedFcn = @(src,event)MenuSelection(app,'d',buttond);
+           
            % Folder Label
            uilabel(grid2,'HorizontalAlignment','right','Text','Destination folder');
             
@@ -106,17 +111,6 @@ classdef BlackPanel <handle
        
                
         function menuCreation(app)
-            
-           %Menu Import 
-           app.menuImport = uimenu(app.MainFrame.Figure,'Text','&Import','Visible','off');
-           
-           mitemf = uimenu(app.menuImport,'Text','&File');
-           mitemf.Accelerator = 'F';
-           mitemf.MenuSelectedFcn = @(src,event)MenuSelection(app,'f'); 
-          
-           mitemd = uimenu(app.menuImport,'Text','&Directory');
-           mitemd.Accelerator = 'D';
-           mitemd.MenuSelectedFcn = @(src,event)MenuSelection(app,'d');
            
            %menu ROI Manager
            app.menuROI = uimenu(app.MainFrame.Figure,'Text','ROIManager','Visible','off');
@@ -124,25 +118,35 @@ classdef BlackPanel <handle
            mitemChoose=uimenu(app.menuROI,'Text','Choose tif');
            mitemChoose.MenuSelectedFcn = @(src,event)chooseSomeImages(app,'f');
            
-           mitemAnalize=uimenu(app.menuROI,'Text','Analize');
-           mitemAnalize.Accelerator = 'A';
-           mitemAnalize.MenuSelectedFcn = @(src,event)roiAnalizer(app);
+           mitemAnalyze=uimenu(app.menuROI,'Text','Analyze');
+           mitemAnalyze.Accelerator = 'A';
+           mitemAnalyze.MenuSelectedFcn = @(src,event)roiAnalyzer(app);
            
            %menu Visualize
            app.menuVisualizeStack = uimenu(app.MainFrame.Figure,'Text','Visualize','Visible','off');
            app.menuVisualizeStack.MenuSelectedFcn = @(src,event)openVisualizer(app,'f');
            %mitemVisual = uimenu(app.menuVisual,'Text','Choose tif')
+           
+           %menuHelp
+           app.menuHelp = uimenu(app.MainFrame.Figure,'Text','Help');
+           app.menuHelp.MenuSelectedFcn = @(src,event)openHelp(app); 
         end
       
         
-        function file=MenuSelection(app,type) %PER IL MENU IMPORT
-           app.type=type; 
+        function file=MenuSelection(varargin) %PER IL MENU IMPORT
+           app=varargin{1};
+           app.type=varargin{2}; 
+           h=varargin{3};
+           col = get(h,'backg');
+           set(h,'backg',[1 .6 .6]);
+           
            if app.type=='f'
                 [app.file,path]=uigetfile('*.tif','MultiSelect','off');
                 %blackElim('f',file)
                 try
                     app.txaB.Value={'File name:';app.file;'Path name:';path};
                     cd(path);
+                    
                 catch
                     app.txaB.Value='NON HAI SELEZIONATO UN FILE';
                 end
@@ -161,7 +165,8 @@ classdef BlackPanel <handle
                 
             end
             file=app.file;
-           
+            pause(0.5)
+            set(h,'backg',col);
         end 
         
         
@@ -191,8 +196,21 @@ classdef BlackPanel <handle
             
         end
             
+        function openHelp(app)
+            txt=uitextarea();
+            pos=txt.Parent.Position;
+            pos([1,2])=0;
+            txt.Position=pos;
+            fid=fopen('help.txt');
+            while ~feof(fid)
+                tline = fgetl(fid);
+                txt.Value=[txt.Value;tline];
+            end
+            fclose(fid);
+
+        end
         
-        function roiAnalizer(app) %INTERFACCIA PER L'ROI TOOLBOX
+        function roiAnalyzer(app) %INTERFACCIA PER L'ROI TOOLBOX
            app.count=0;
            app.FrameROI=uifigure('Name','ROI Analizer','Color','#FFFFFF','Position',[1049,337,250,400]);
            gROI=uigridlayout(app.FrameROI,[5 2]);
@@ -290,7 +308,7 @@ classdef BlackPanel <handle
             str=[app.textROI.Value;'';'mean_diameter=',num2str(m)];
             app.textROI.Value=str;
             m=abs(m-[6,12,24,48]);
-            [mval,ind]=min(m);
+            [~,ind]=min(m);
             str=[app.textROI.Value;'';'spatial_scale=',num2str(ind)];
             app.textROI.Value=str;
             
@@ -299,7 +317,6 @@ classdef BlackPanel <handle
             
         function closeBlack(app)      
            app.txaB.Value=''; 
-           app.menuImport.Visible='off';
            app.menuROI.Visible='off';
            app.menuVisualizeStack.Visible='off';
            app.PanelB.Visible='off';
