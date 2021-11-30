@@ -1,6 +1,5 @@
-function [img,type,img_idx]=createImage(fileName)
-%image_idx= image with the index (in matlab 1 based coords) of the cells.
-%
+function [img,type]=createImage(fileName)
+
 load(fileName);
 type='';
 %type = questdlg('What type of image?', 'Select', 'cell masks','neuropil masks','skewness','cell masks');
@@ -18,9 +17,9 @@ idx_cell = find(iscell(:,1)==1); %just taking the ROI classified as cells
                 ypix = stat{idx_cell(n)}.ypix(stat{idx_cell(n)}.overlap==0)+1; %without overlapping pixels
                 xpix = stat{idx_cell(n)}.xpix(stat{idx_cell(n)}.overlap==0)+1;
                 ind  = sub2ind(size(im), ypix, xpix);
-                im(ind)=idx_cell(n);
+                im(ind)=idx_cell;
             end
-            
+            %img=rescale(im);
 %             
 %         case 'neuropil masks'
 %              disp('neuropil')
@@ -43,10 +42,9 @@ idx_cell = find(iscell(:,1)==1); %just taking the ROI classified as cells
                 xpix = stat{idx_cell(n)}.xpix(stat{idx_cell(n)}.overlap==0)+1;
                 ind  = sub2ind(size(im_skew), ypix, xpix);
                 im_skew(ind)= stat{idx_cell(n)}.skew;
-                im(ind)=idx_cell(n);
+                %skewness(idx_cell(n))= stat{idx_cell(n)}.skew;
             end
             img=im_skew;
-            img_idx=im; %image with MATLAB indexes
                  
     %end
 

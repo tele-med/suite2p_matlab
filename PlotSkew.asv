@@ -437,10 +437,7 @@ classdef PlotSkew <handle
             imageMult(isnan(imageMult))=0;
             V = nonzeros(imageMult);
             matlabidx=unique(V);
-            ismemb=ismember(app.skewfilt_idx,matlabidx); %need to pass from the cells I want to keep to one I want get rid off
-            indexes=find(ismemb==0); %indexes of cells I want to eliminate
             
-            variablesUpdate(app,indexes);
             
             
         end

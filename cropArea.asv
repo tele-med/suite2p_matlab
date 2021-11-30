@@ -1,0 +1,19 @@
+function cropArea(originalImage,copyImage)
+type = questdlg('Cropping', 'Type:', 'exclude an area','keep an area','keep an area');
+switch type
+    case 'exclude an area'
+        img     = NaN(ops.Ly,ops.Lx);
+        h = drawfreehand; %draw something 
+        M = h.createMask();
+        copyImage(M) = NaN;
+        imshow(I);
+
+    case 'keep an area'
+        img     = NaN(ops.Ly,ops.Lx);
+        h = drawfreehand; %draw something 
+        M = ~h.createMask();
+        copyImage(M) = NaN;
+        imshow(I);
+end
+        
+end
