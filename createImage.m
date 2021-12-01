@@ -15,8 +15,8 @@ idx_cell = find(iscell(:,1)==1); %just taking the ROI classified as cells
 %             disp('cell mask')
             im = NaN(ops.Ly,ops.Lx);
             for n=1:length(idx_cell)
-                ypix = stat{idx_cell(n)}.ypix(stat{idx_cell(n)}.overlap==0)+1; %without overlapping pixels
-                xpix = stat{idx_cell(n)}.xpix(stat{idx_cell(n)}.overlap==0)+1;
+                ypix = stat{idx_cell(n)}.ypix+1; %without overlapping pixels
+                xpix = stat{idx_cell(n)}.xpix+1;
                 ind  = sub2ind(size(im), ypix, xpix);
                 im(ind)=idx_cell(n);
             end
@@ -39,8 +39,8 @@ idx_cell = find(iscell(:,1)==1); %just taking the ROI classified as cells
 %            %skewness = zeros(1,length(idx_cell));
             im_skew = NaN(ops.Ly,ops.Lx); %image with skewness
             for n=1:length(idx_cell)
-                ypix = stat{idx_cell(n)}.ypix(stat{idx_cell(n)}.overlap==0)+1; %without overlapping pixels
-                xpix = stat{idx_cell(n)}.xpix(stat{idx_cell(n)}.overlap==0)+1;
+                ypix = stat{idx_cell(n)}.ypix+1; %without overlapping pixels
+                xpix = stat{idx_cell(n)}.xpix+1;
                 ind  = sub2ind(size(im_skew), ypix, xpix);
                 im_skew(ind)= stat{idx_cell(n)}.skew;
                 im(ind)=idx_cell(n);
