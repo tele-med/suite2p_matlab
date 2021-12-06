@@ -44,12 +44,12 @@ classdef CalciumApp <handle
             
             [filename,pathname]=uigetfile('*.mat','Pick a "Fall.mat" file');
             
-            prompt={'Enter the  neuropil correction factor value:'};
-            name='alpha factor';
+            prompt={'Neuropil correction factor value:','Sampling rate [Hz]:'};
+            name1='Inputs';
             numlines=1;
-            defaultanswer={'0.9'};
-            answer=inputdlg(prompt,name,numlines,defaultanswer);
-            app.Swing=PlotSkew([pathname,filename],str2double(answer{1}));
+            defaultanswer={'0.9','1'};
+            answer=inputdlg(prompt,name1,numlines,defaultanswer);
+            app.Swing=PlotSkew([pathname,filename],str2double(answer{1}),str2double(answer{2}));
             
         end
         

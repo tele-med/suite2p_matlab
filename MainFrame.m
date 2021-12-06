@@ -1,5 +1,4 @@
 classdef MainFrame <handle
-    
     %proprietà della classe
     properties
         
@@ -72,15 +71,7 @@ classdef MainFrame <handle
                     return
             end
         end
-        
 
-  
-                
-        
-        
-        
-
-            
         
     end
     
