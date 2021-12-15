@@ -25,7 +25,11 @@ end
 eliminated(eliminated==0)=[];
 
 if ~isempty(eliminated)
+    if length(eliminated)==1
+        eliminated(2)=numframe-1;
+    end
     newName = append(extractBefore(filename,'.tif'),strrep(mat2str(eliminated),' ','-'),'.tif');
+    folderName=append('suite2p',extractBefore(newName,'.tif'));
     newName=fullfile(destFolder,newName);
     imwrite(totalImage(:,:,1), newName);
     for i = 2:size(totalImage, 3) %append the rest of the slices
@@ -33,6 +37,8 @@ if ~isempty(eliminated)
     end
 end
 
+
+mkdir(destFolder,folderName)
 image=totalImage;
 
 end

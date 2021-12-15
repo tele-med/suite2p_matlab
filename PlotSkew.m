@@ -8,6 +8,7 @@ classdef PlotSkew <handle
         in                  %input structure
         
         ButtonI             %back button
+        ButtonHelp
         
         deltaFoF            %deltaFoverF signal of all the cells imported from suite2p
         deltaFoFskew        %deltaFoverF filtered through skewness (and eventually variance)
@@ -49,13 +50,18 @@ classdef PlotSkew <handle
         iLs2p               %indexes according to suite2p metrics
     end
     
+    
+    methods(Static)
+        
+        function helpFunct
+            
+        end
+    end
+    
     methods
         
         function app=PlotSkew(fileName,correctionFactor,fs)
-            %fileName= 'Fall.mat' of the suite2p analysis you want
-            %correctionFactor= input from the general GUI that needs to be
-            %memorized globally and passed here, so here you don't have to
-            %ask for a user input.
+           
             app.correctionFactor=correctionFactor;
             app.fileName=fileName; %il nome è Fall.mat, è il file che contiene tutti gli output di suite2p
             app.fs=fs;
@@ -139,9 +145,9 @@ classdef PlotSkew <handle
             
             imshow(app.skew, 'Colormap',mymap);
             
-            maxSkew=round(max(max(app.skew)));
+            maxSkew=round(max(max(app.skew)),1);
             middle=maxSkew/2;
-            hcb=colorbar('Ticks',[-2,1,middle],'TickLabels',{'-2','1',mat2str(middle)});
+            hcb=colorbar('Ticks',[-2,middle,maxSkew],'TickLabels',{'-2',mat2str(middle),mat2str(maxSkew)});
             set(get(hcb,'Title'),'String','Skewness')
             caxis([-2 middle]) 
             
@@ -348,8 +354,8 @@ classdef PlotSkew <handle
 
             %image construction
             for n=1:length(app.iL)
-                ypix = app.skew_cell{app.iL(n)}.ypix(app.skew_cell{app.iL(n)}.overlap==0)+1; %without overlapping pixels
-                xpix = app.skew_cell{app.iL(n)}.xpix(app.skew_cell{app.iL(n)}.overlap==0)+1;
+                ypix = app.skew_cell{app.iL(n)}.ypix+1; %without overlapping pixels
+                xpix = app.skew_cell{app.iL(n)}.xpix+1;
                 ind  = sub2ind(size(app.s), ypix, xpix);
                 app.s(ind)=NaN;
             end
@@ -422,7 +428,7 @@ classdef PlotSkew <handle
 
         function keepCells(app)
             
-            idxs2p=str2double(split(app.TextC.String,' '));
+            idxs2p=str2double(split(app.TextC.String,','));
             if ~isnan(idxs2p)
                 indexes=idxs2p+1; %from suite2p to matlab indexing sys
                 ismemb=ismember(app.skewfilt_idx,indexes); %need to pass from the cells I want to keep to one I want get rid off
@@ -431,8 +437,8 @@ classdef PlotSkew <handle
 
                 %image construction
                 for n=1:length(indexes)
-                    ypix = app.skew_cell{indexes(n)}.ypix(app.skew_cell{indexes(n)}.overlap==0)+1; %without overlapping pixels
-                    xpix = app.skew_cell{indexes(n)}.xpix(app.skew_cell{indexes(n)}.overlap==0)+1;
+                    ypix = app.skew_cell{indexes(n)}.ypix+1; %without overlapping pixels
+                    xpix = app.skew_cell{indexes(n)}.xpix+1;
                     ind  = sub2ind(size(app.s), ypix, xpix);
                     app.s(ind)=NaN;
                 end
@@ -472,14 +478,19 @@ classdef PlotSkew <handle
         
         function indietro(app,figHandler)
             app.ButtonI=uicontrol('Parent',figHandler,'Style','pushbutton','String','<<Restart',...
-                'Position',[10,480,60,20],'Units','normalized','Visible','on',...
+                'Position',[10,480,50,20],'Units','normalized','Visible','on',...
                 'CallBack',@(ButtonH,event)buttonIndietro(app,figHandler));
+            app.ButtonHelp=uicontrol('Parent',figHandler,'Style','pushbutton','String','Help',...
+                'Position',[60,480,50,20],'Units','normalized','Visible','on',...
+                'CallBack',@(ButtonH,event)openHelp('helpSwing.txt'));
         end
         
         function buttonIndietro(app,figHandler)
             close(figHandler)
             PlotSkew(app.fileName,app.correctionFactor,app.fs);
         end
+        
+        
   end
     
     

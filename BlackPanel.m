@@ -32,20 +32,7 @@ classdef BlackPanel <handle
    
    
    methods(Static)
-       
-        function openHelp
-            txt=uitextarea();
-            pos=txt.Parent.Position;
-            pos([1,2])=0;
-            txt.Position=pos;
-            fid=fopen('help.txt');
-            while ~feof(fid)
-                tline = fgetl(fid);
-                txt.Value=[txt.Value;tline];
-            end
-            fclose(fid);
-
-        end
+        
    end
    
    methods
@@ -91,8 +78,8 @@ classdef BlackPanel <handle
            uilabel(grid2,'HorizontalAlignment','right','Text','Destination folder');
             
            % Folder edit field
-           app.folderField=uieditfield(grid2,'ValueChangedFcn',@(src,event)textChanged(app,'f'));
            app.destFolder='noBlack';
+           app.folderField=uieditfield(grid2,'ValueChangedFcn',@(src,event)textChanged(app,'f'));
            app.folderField.Value = 'noBlack';
           
            % Level Label
@@ -100,9 +87,9 @@ classdef BlackPanel <handle
             
            % Level edit field
            app.levelField=uieditfield(grid2,'numeric');
-           app.levelField.ValueChangedFcn=@(src,event)textChanged(app,'l');
            app.level=1000;
-           app.levelField.Value =1000;           
+           app.levelField.ValueChangedFcn=@(src,event)textChanged(app,'l');
+           app.levelField.Value =1000;      
            
            app.runButton=uibutton(grid2,'Text','RUN');
            app.runButton.Layout.Row=4;
@@ -147,52 +134,8 @@ classdef BlackPanel <handle
            
            %menuHelp
            app.menuHelp = uimenu(app.MainFrame.Figure,'Text','Help');
-           app.menuHelp.MenuSelectedFcn = @(src,event)app.openHelp; 
+           app.menuHelp.MenuSelectedFcn = @(src,event)openHelp('help.txt'); 
         end
-      
-        
-        function file=MenuSelection(varargin) %PER IL MENU IMPORT
-           app=varargin{1};
-           app.type=varargin{2}; 
-           try
-             h=varargin{3};
-             col = get(h,'backg');
-             set(h,'backg',[1 .6 .6]);
-           catch
-           end
-               
-           if app.type=='f'
-                [app.file,path]=uigetfile('*.tif','MultiSelect','off');
-                %blackElim('f',file)
-                try
-                    app.txaB.Value={'File name:';app.file;'Path name:';path};
-                    cd(path);  
-                catch
-                    app.txaB.Value='NON HAI SELEZIONATO UN FILE';
-                end
-            
-            else
-                dirname = uigetdir('C:\');
-                try
-                    cd(dirname)
-                    d=dir('*');
-                    d=string({d.name});
-                    d=["Current folder",d];
-                    app.txaB.Value=d;
-                catch
-                    app.txaB.Value='NON HAI SELEZIONATO LA CARTELLA';
-                end
-                
-            end
-            file=app.file;
-            
-            try
-                pause(0.5)
-                set(h,'backg',col);
-            catch
-                
-            end
-        end 
         
         
         function runBlackElim(app) %FUNZIONE CHE ELIMINA I FRAME NERI DAL TIF MOVIE 

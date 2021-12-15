@@ -79,10 +79,6 @@ disp('Process started')
 
 if fd=='f'
     blackOneTif(filename,destFolder,level);
-    %totalImage=blackOneTif(filename,destFolder,level);
-    %tifVisualizer(totalImage);
-    
-    
 else
     tifList= dir ('*.tif');
     tifList={tifList.name};    

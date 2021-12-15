@@ -16,14 +16,16 @@ classdef CalciumApp <handle
         %costruttore
         function app=CalciumApp
             
-            app.Frame=MainFrame; %Creo il Frame con menù
+            app.Frame=MainFrame; %main initial frame 
             app.Frame.Figure.Position=[100 337 560 420];
-            app.PanelBlack=BlackPanel(app.Frame); %Creo il Pannello del black frame elimination toolbox
-            app.Frame.Figure.CloseRequestFcn = @(src,event)my_closereq(app);
+            app.PanelBlack=BlackPanel(app.Frame); %Panel for the black frame elimination toolbox
+            
+            app.Frame.blackButton.ButtonPushedFcn=@(btn,event)openBlack(app); %callback to jump in the black elimination toolbox
+            app.Frame.drugButton.ButtonPushedFcn=@(btn,event)openDrug(app); %callback for the Drug Experiment Frame
+            app.Frame.swingButton.ButtonPushedFcn=@(btn,event)openSwing(app); %callback for the Swing Experiment Frame
+        
+            app.Frame.Figure.CloseRequestFcn = @(src,event)my_closereq(app); %closing callback
            
-            app.Frame.blackButton.ButtonPushedFcn=@(btn,event)openBlack(app); %callback per entrare nel black elimination toolbox
-            app.Frame.drugButton.ButtonPushedFcn=@(btn,event)openDrug(app); %callback per Frame Drug Experiment
-            app.Frame.swingButton.ButtonPushedFcn=@(btn,event)openSwing(app);
         end
             
             
@@ -65,7 +67,7 @@ classdef CalciumApp <handle
                     delete(app.PanelBlack.MainFrame)
                     delete(app.PanelBlack.FrameROI)
                     close all
-                    %delete(app.DrugFigure.Figure)
+                    delete(app.Drug.Figure)
                     %delete(app.SwiggleFigure)
                     %delete(app.OptoFigure)
                 case 'Cancel'
