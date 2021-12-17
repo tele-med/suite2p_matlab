@@ -1,12 +1,7 @@
 function file=MenuSelection(varargin) %PER IL MENU IMPORT
            app=varargin{1};
            app.type=varargin{2}; 
-           try
-             h=varargin{3};
-             col = get(h,'backg');
-             set(h,'backg',[1 .6 .6]);
-           catch
-           end
+
                
            if app.type=='f'
                 [app.file,path]=uigetfile('*.tif','MultiSelect','off');
@@ -36,17 +31,15 @@ function file=MenuSelection(varargin) %PER IL MENU IMPORT
                 
                 try
                     app.txaB.Value={'File name:';app.file;'Path name:';app.path};
-                    cd(app.path);  
+                    cd(app.path);
+                    app.path=append(app.path,'\',app.file);
+                    app.in=load(app.path);
+                    app.idx_cell=find(app.in.iscell==1);
+                    
                 catch
                     app.txaB.Value='NO FILE SELECTED';
                 end
            end
-            file=app.file;
-            
-            try
-                pause(0.5)
-                set(h,'backg',col);
-            catch
-                
-            end
+           file=app.file;
+
         end 

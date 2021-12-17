@@ -6,6 +6,7 @@ classdef DrugClass <handle
         PanelConfig
         
         ax
+        ax2
         
         type %m because i'm searching for mat files
         
@@ -13,7 +14,13 @@ classdef DrugClass <handle
         
         file
         path
+        in
+        idx_cell
+        IDX
+        Line
+        deleted
         
+     
         fs
         fsField
         
@@ -29,26 +36,35 @@ classdef DrugClass <handle
         runButton
         
         saveButton
-        
         dfUp
         dfDown
         dfMiddle
+        time
+        interval
+
+        buttonDelete
+        
     end
     
     methods
     
         function app=DrugClass
+            
             %costruttore
             app.type='m';
             app.Figure=uifigure('Name','Drug Application Experiment');
-            app.Figure.Position=[415   321   760   420];
-            gB=uigridlayout(app.Figure,[1 2]);
-            gB.ColumnWidth={210,'1x'};
+            app.Figure.Position=[115   221   1200   470];
+            gB=uigridlayout(app.Figure,[1 3]);
+            gB.ColumnWidth={210,'1x','1x'};
+            
             configPanel(app,gB)
+            
             p=uipanel(gB);
             p.Layout.Column=2;
             app.ax = axes(p);
             
+            allPanelConfig(app,gB)
+
 
         end
     
@@ -111,20 +127,32 @@ classdef DrugClass <handle
            app.cutField.Value = 0.5;
            
            app.saveButton=uibutton(grid2,'Text','Save data');  %COLLEGA AL CALLBACK
-           app.saveButton.Layout.Row=7;    
+           app.saveButton.Layout.Row=7;
+           app.saveButton.Layout.Column=[1,2];
+           app.saveButton.ButtonPushedFcn = @(src,event)saveFiles(app);
           
            
            % RUN
-           app.runButton=uibutton(grid2,'Text','RUN');
+           app.runButton=uibutton(grid2,'Text','RUN/RESTART');
            app.runButton.Layout.Row=6;
            app.runButton.Layout.Column=[1,2];
-           app.runButton.ButtonPushedFcn=@(btn,event)PostSuite2pStim(app,app.file,app.fs,app.correctionFactor,app.order,app.cut,app.ax);
+           app.runButton.ButtonPushedFcn=@(btn,event)PostSuite2pStim(app,app.fs,app.correctionFactor,app.order,app.cut,app.ax,app.ax2);
           
            app.txaB=uitextarea(grid2,'Editable','off');
            app.txaB.Layout.Row=8;
            app.txaB.Layout.Column=[1,2];
            
        
+        end
+        
+        function allPanelConfig(app,gB)
+            p2=uipanel(gB);
+            p2.Layout.Column=3;
+            app.ax2 = axes(p2);
+            
+            app.buttonDelete=uibutton(p2,'Text','Delete Trace','Position',[2,2,200,20]);
+            app.buttonDelete.ButtonPushedFcn = @(src,event)deleteTrace(app);
+          
         end
         
         function takeValue(app,label)
@@ -141,15 +169,47 @@ classdef DrugClass <handle
          
         end
     
+        function deleteTrace(app)
+            
+            Midx=app.idx_cell(app.IDX);
+            s2pidx=Midx-1;
+            app.deleted=[app.deleted,s2pidx];
+            app.in.iscell(Midx,1)=0; %cancello la cellula 
+            app.idx_cell(app.IDX)=[]; %??
+            PostSuite2pStim(app,app.fs,app.correctionFactor,app.order,app.cut,app.ax,app.ax2);
+            
+            h=app.saveButton;
+            set(h,'backg',[1 .6 .6]);
+           
+        end
+     
     
         function saveFiles(app)
             %salvataggio
-            %prompt per scegliere directory di destinazione e poi i save in
+            %prompt per scegliere directory di destinazione e poi salvare in
             %quel path
-            save(append(extractBefore(app.path,'suite2p'),'dfUp',name,'-',num2str(tF),'-',num2str(tL)),'app.dfUp');
-            save(append(extractBefore(app.path,'suite2p'),'dfDown',name,'-',num2str(tF),'-',num2str(tL)),'app.dfDown');
-            save(append(extractBefore(app.path,'suite2p'),'dfMiddle',name,'-',num2str(tF),'-',num2str(tL)),'app.dfMiddle');
+            col=get(app.runButton,'backg');
+            set(app.saveButton,'backg',[0,1,0]);
+            
+            
+            %EXPORT DELLE IMMAGINI
+            Fig2=figure();
+            set(Fig2, 'Visible', 'off');
+            copyobj(app.ax,Fig2);
+            print(Fig2,'Groups.png','-dpng','-r300')
+            
+            m=[app.dfUp;app.dfMiddle;app.dfDown;app.time;app.interval]';
+            
+            iscell=app.in.iscell;
+            save('Fall.mat','iscell','-append');
+            writematrix(app.deleted,'deletedCells.txt');
+            writematrix(m,'Up-Middle-Down-time-intervals.txt')
+            
+            set(app.saveButton,'backg',col);
         end
+        
+        
+        
 end
     
 end
