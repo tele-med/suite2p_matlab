@@ -11,7 +11,7 @@ for k=1:size(points,2)
     plot(t,deltaFoF(idx(1,k),:))
     hold on
 end
-xlabel('time[s]')
+xlabel('time[min]')
 ylabel('Fluorescence dF/F')
 legend(l);
 

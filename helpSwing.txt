@@ -41,7 +41,9 @@ Push on the "Filter cells" button to delete all the low variance cells showed in
 Click on the "Visualize" button to see their fluorescence signals plotted.
 Click on the "Keep this cells" button if you want to maintain just these cells.
 **CropImage
-Use it if you want to work on the cells of a specific area of the FOV 
+Use it if you want to work on the cells of a specific area of the FOV.
+You can both select an area you want to work on or an area you want to exlude from further analysis.
+After you selected the area you have to right click on it to delete the selection mask.
 
 
 

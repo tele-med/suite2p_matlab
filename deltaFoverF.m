@@ -5,8 +5,7 @@ function deltaFoF = deltaFoverF(iscell,F,Fneu,correctionFactor,order,tStim)
 %2)F       fluorescence trace
 %3)Fneu    neuropil trace
 %OPTIONAL PARAMETERS:
-%4)alpha   to use in Fcorrected=F-alpha*Fneu. If not specified alpha=0.7 as
-%          in Suite2p
+%4)alpha   to use in Fcorrected=F-alpha*Fneu. If not specified alpha=0.9 
 %5)order   order of the median filter, default=5
 %6)tStim   time of drug application/stimuli,if you introduced one.
 
@@ -15,7 +14,7 @@ if nargin <3
     disp("Error,not enough input parameters");
 end
 if nargin==3
-    correctionFactor=0.7;
+    correctionFactor=0.9;
     order=5;
     tStim=size(F,2);
     

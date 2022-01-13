@@ -85,11 +85,11 @@ dFNorm=dFoverF;
         hold (ax,'on')
     end
 
-    tF=tF/fs/60;
-    tL=tL/fs/60;
-    xline(tF,'-.',{'Drug appl',round(tF,2)},'Parent',ax);
-    xline(tL,'-.',{'Wash out',round(tL,2)},'Parent',ax);
-    xlabel('Time [min]','Parent',ax)
+      tF=tF/fs;
+%     tL=tL/fs;
+%     xline(tF,'-.',{'Drug appl'},'Parent',ax);
+%     xline(tL,'-.',{'Wash out'},'Parent',ax);
+    xlabel('Time [s]','Parent',ax)
     ylabel('dF/F averaged trace','Parent',ax)
     title(sprintf('Gouping %d cells in excited-inhibited-no response',size(dFoverF,1)),'Parent',ax);
    
@@ -97,7 +97,7 @@ dFNorm=dFoverF;
     LineList = plot(time,dFNorm,'Parent',ax2);
     set(LineList, 'ButtonDownFcn', {@myLineCallback, LineList,app});
 
-    xlabel('Time [min]','Parent',ax2)
+    xlabel('Time [s]','Parent',ax2)
     ylabel('dF/F','Parent',ax2)
     title('All cells dF/F traces','Parent',ax2)
 

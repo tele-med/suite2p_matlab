@@ -51,13 +51,6 @@ classdef PlotSkew <handle
     end
     
     
-    methods(Static)
-        
-        function helpFunct
-            
-        end
-    end
-    
     methods
         
         function app=PlotSkew(fileName,correctionFactor,fs)
@@ -86,6 +79,7 @@ classdef PlotSkew <handle
             
             
             app.t=0:1/app.fs:size(app.deltaFoF,2)/app.fs-1;
+            app.t=app.t/60; %in minutes
             
             %levels of skewness of each cell
             for s=1:length(app.stat_cell)
@@ -99,23 +93,14 @@ classdef PlotSkew <handle
         
         function initImage(app)
             
-            [image,type,image_idx]=createImage(app.fileName);
-            
-%             switch type
-%                 case'cell masks'
-%                     app.cells=image; %select cell masks
-%                     showImage(app,app.cells);
-%                 case 'neuropil masks'
-%                     app.neu=image; %select neuropil masks
-%                     showImage(app,app.neu);
-%                 case 'skewness'
-                    app.skew=image; %select skewness
-                    app.s=image;
-                    skewnessHandling(app)
-%                     
-%             end
+            [image,~,image_idx]=createImage(app.fileName);
 
-              app.imageIdx=image_idx;
+            app.skew=image; %select skewness
+            app.s=image;
+            skewnessHandling(app)
+
+
+            app.imageIdx=image_idx;
             
             
         end
@@ -151,6 +136,10 @@ classdef PlotSkew <handle
             set(get(hcb,'Title'),'String','Skewness')
             caxis([-2 middle]) 
             
+            app.hFig.Position=[400,100,800,500];
+            axes=gca;
+            axes.Position=[0.2,0.14,0.8,0.8];
+            
             addComponents(app)
             
         end
@@ -159,11 +148,6 @@ classdef PlotSkew <handle
             %button to come back to the principal question box
             indietro(app,app.hFig);
             
-%             %button random/skewness visualization
-%             app.ButtonRS=uicontrol('Parent',app.hFig,'Style','pushbutton','String','random/skew',...
-%                 'Position',[100,480,100,20],'Units','normalized','Visible','on',...
-%                 'CallBack',@(ButtonVis,event)randomSkew(app));
-%             
             %text area for cell selection
             app.TextC=uicontrol('Parent',app.hFig,'Style','edit','Visible','on',...
                 'Position',[10,450,100,20],'String','#cell separated by commas','Units','Normalized');
@@ -196,15 +180,9 @@ classdef PlotSkew <handle
             
             app.ButtonCrop=uicontrol('Parent',app.hFig,'Style','pushbutton','String','CropImage','Position',[400,20,100,20],'Units','normalized','Visible','on',...
                 'CallBack',@(src,event)croppingFunction(app));
-            
-            app.hFig.Position=[400,100,800,500];
-            axes=gca;
-            axes.Position=[0.2,0.14,0.8,0.8];
+         
         end
         
-        function randomSkew(app)
-            %%%%pensaci
-        end
         
         function skewnessLevelChanged(app)
             %textChanged callback function for the text field dedicated to the
@@ -324,7 +302,7 @@ classdef PlotSkew <handle
                 text(x,y,num2str(app.iLs2p(i,:))); %plotting the suite2p index on every trace
             end
             ylim([0 size(A,1)+2]);
-            xlabel('time [s]')
+            xlabel('time [min]')
             ylabel('Fluorescence traces')
 
             %slider component
@@ -383,8 +361,10 @@ classdef PlotSkew <handle
         end
         
         function intrestingCells(app)
-            delete(app.txt);
-            app.txt=[];
+            %app.txt=[];
+            j=findall(gca,'Type','Text');
+            delete(j);
+            
             idxs2p=str2double(split(app.TextC.String,','));
             indexes=idxs2p+1; %from suite2p to matlab indexing sys
             [~,indexes]=ismember(indexes,app.skewfilt_idx);
@@ -416,14 +396,14 @@ classdef PlotSkew <handle
                     trace=traces(i,:);
                     plot(app.t,trace+i)
                     hold on
-                    text(length(trace)/2,i,coords{i,3},'Color','m','FontSize',8);
-                    
+                    text(app.t(length(app.t)/2),i,coords{i,3},'Color','m','FontSize',8);    
                 end
                 begindex=endindex+1;
-                xlabel('time[s]')
+                xlabel('time[min]')
                 ylabel('Fluorescence traces')
                 
             end
+            
         end
 
         function keepCells(app)

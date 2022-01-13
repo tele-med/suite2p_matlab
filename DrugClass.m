@@ -19,7 +19,7 @@ classdef DrugClass <handle
         IDX
         Line
         deleted
-        
+        help
      
         fs
         fsField
@@ -76,12 +76,12 @@ classdef DrugClass <handle
            app.PanelConfig.Layout.Column=1;
            
            % Grid in the panel
-           grid2 = uigridlayout(app.PanelConfig,[7 2]);
-           grid2.RowHeight = {22,22,22,22,22,22,22,'1x'};
+           grid2 = uigridlayout(app.PanelConfig,[8 2]);
+           grid2.RowHeight = {22,22,22,22,22,22,22,22,'1x'};
            grid2.ColumnWidth = {140,'1x'};
 
            %Buttons for file and directory selection
-           buttonf = uibutton(grid2,'Text','Import File');
+           buttonf = uibutton(grid2,'Text','Import .mat file');
            buttonf.ButtonPushedFcn = @(src,event)MenuSelection(app,'m',buttonf);
            buttonf.Layout.Column=[1,2];
            
@@ -137,10 +137,14 @@ classdef DrugClass <handle
            app.runButton.Layout.Row=6;
            app.runButton.Layout.Column=[1,2];
            app.runButton.ButtonPushedFcn=@(btn,event)PostSuite2pStim(app,app.fs,app.correctionFactor,app.order,app.cut,app.ax,app.ax2);
-          
+           
+           app.help=uibutton(grid2,'Text','Help');
+           app.help.ButtonPushedFcn = @(src,event)openHelp('helpDrug.txt');
+           
            app.txaB=uitextarea(grid2,'Editable','off');
-           app.txaB.Layout.Row=8;
+           app.txaB.Layout.Row=9;
            app.txaB.Layout.Column=[1,2];
+           
            
        
         end
