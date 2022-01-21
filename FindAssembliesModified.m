@@ -1,43 +1,58 @@
 function [assembliesCells, matchIndexTimeSeries, matchIndexTimeSeriesSignificance, assembliesVectors, PCsRot,confSynchBinary]=FindAssembliesModified(skewfilt_idx)
+%To work with this function you need to provide a file with the _RASTER.mat
+%suffix organized as follows:
+%deltaFoF: a T x N matrix of the ?F/F0 time series of all ROIs.
+%raster: a T x N matrix. For each column (i.e., each ROI), it is filled either with zeros for frames with 
+%non-significant fluorescent transients or with the ?F/F0 values of the frames with significant transients. 
+%If the user does not wish to plot significant trial responses in the response analysis module, or if all the 
+%?F/F0 values should be considered in the module for the detection of the assemblies (instead of only 
+%the significant transients), it should be a T x N matrix filled with ones.
+%movements: T x 1 binary array, with ones for frames where an imaging artifact was found,
+%and otherwise zeros.
+%dataAllCells.avg: average image of the imaging file, showing the anatomy of the imaged plane.
+%dataAllCells.cell_per: an Nx1 cell array, containing the perimeter coordinates for each ROI.
+%dataAllCells.cell: a 1 x N cell array, containing the pixel indexes of each ROI
+%
+%To obtain this file use the createRASTER function.
 
 %%%%%%% INPUT FILES
 [filename,pathname] = uigetfile({'*_RASTER.mat';'*_RASTER.MAT'},'Open file with raster data', 'MultiSelect', 'off');
 filenameRASTER=fullfile(pathname,filename);
 
 cutName=strfind(filenameRASTER,'_RASTER.mat');
-if isempty(cutName)
-    cutName=strfind(filenameRASTER,'_MultiPlane_RASTER.mat');
-    filenameALL_CELLS=[filenameRASTER(1:cutName-1) '_MultiPlane_ALL_CELLS.mat'];
-    outputFile=[filenameRASTER(1:cutName-1) '_MultiPlane_CLUSTERS.mat'];
-else
-    filenameALL_CELLS=[filenameRASTER(1:cutName-1) '_ALL_CELLS.mat'];
-    outputFile=[filenameRASTER(1:cutName-1) '_CLUSTERS.mat'];
-end
+% if isempty(cutName)
+%     cutName=strfind(filenameRASTER,'_MultiPlane_RASTER.mat');
+%     filenameALL_CELLS=[filenameRASTER(1:cutName-1) '_MultiPlane_ALL_CELLS.mat'];
+%     %outputFile=[filenameRASTER(1:cutName-1) '_MultiPlane_CLUSTERS.mat'];
+% else
+%    filenameALL_CELLS=[filenameRASTER(1:cutName-1) '_ALL_CELLS.mat'];
+    %outputFile=[filenameRASTER(1:cutName-1) '_CLUSTERS.mat'];
+% end
 
 dataRaster=load(filenameRASTER);
-if exist(filenameALL_CELLS, 'file') == 2
-    dataAllCells=load(filenameALL_CELLS);
-else
+% if exist(filenameALL_CELLS, 'file') == 2
+%     dataAllCells=load(filenameALL_CELLS);
+% else
     if isfield(dataRaster,'dataAllCells')
         if isfield(dataRaster.dataAllCells,'avg')
             dataAllCells.avg=dataRaster.dataAllCells.avg;
         else
-            disp('Error: Field dataAllCells.avg missing in imported fluorescence file. See "Imported Fluorescence Data File" in Box 2 of tutorial. Quitting program.')
+            disp('Error: Field avg in dataAllCells is missing in RASTER file. Quitting program.')
         end
         if isfield(dataRaster.dataAllCells,'cell_per')
             dataAllCells.cell_per=dataRaster.dataAllCells.cell_per;
         else
-            disp('Error: Field dataAllCells.cell_per missing in imported fluorescence file. See "Imported Fluorescence Data File" in Box 2 of tutorial. Quitting program.')
+            disp('Error: Field cell_per in dataAllCells is missing in RASTER file.Quitting program.')
         end
         if isfield(dataRaster.dataAllCells,'cell')
             dataAllCells.cell=dataRaster.dataAllCells.cell;
         else
-            disp('Error: Field dataAllCells.cell missing in imported fluorescence file. See "Imported Fluorescence Data File" in Box 2 of tutorial. Quitting program.')
+            disp('Error: Field cell in dataAllCells is missing in RASTER file.Quitting program.')
         end
     else
-        disp('Error: Variable dataAllCells missing in imported fluorescence file. See "Imported Fluorescence Data File" in Box 2 of tutorial. Quitting program.')
+        disp('Error: Variable dataAllCells missing in RASTER file. Quitting program.')
     end
-end
+%end
 
 raster=dataRaster.raster;
 deltaFoF=dataRaster.deltaFoF;
@@ -45,10 +60,8 @@ movements=dataRaster.movements;
 
 %%
 
-
 ansMethod = questdlg('Select the number of the clustering method to be used', 'Select clustering method', 'PCA-promax','K-means','Hierarchical clustering','PCA-promax');
 clustering.method=ansMethod;
-
 
 if strcmp(clustering.method,'PCA-promax')
     % Ask if manually select cut-off for assembly cells
@@ -115,7 +128,7 @@ confSynchBinary=find(pValueBinary<0.05,1,'first');
 if strcmp(clustering.method,'PCA-promax') | strcmp(clustering.PCA,'Yes')
     
     
-    [PCs,Score,eigenvals]=princomp(rasterZTransf);
+    [PCs,~,eigenvals]=princomp(rasterZTransf);
     maxEigenValPastur=(1+sqrt(size(raster,2)/size(raster,1)))^2;
     minEigenValPastur=(1-sqrt(size(raster,2)/size(raster,1)))^2;
     correctionTracyWidom=size(raster,2)^(-2/3);
@@ -138,9 +151,10 @@ end
 if strcmp(clustering.method,'K-means')
     
     if strcmp(clustering.distanceMetric,'euclidean')
-        clustering.distanceMetric='sqEuclidean';
+        clustering.distanceMetric='sqeuclidean';
     end
     if strcmp(clustering.PCA,'Yes')
+        %working with reduced dimensionality
         idx = kmeans(PCs(:,1:cutOffPC), clustering.nClust,'distance',clustering.distanceMetric,'replicates',3);
     else
         idx = kmeans(rasterZTransf', clustering.nClust,'distance',clustering.distanceMetric,'replicates',3);

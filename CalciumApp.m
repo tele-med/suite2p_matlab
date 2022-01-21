@@ -67,8 +67,8 @@ classdef CalciumApp <handle
                     delete(app.PanelBlack.MainFrame)
                     delete(app.PanelBlack.FrameROI)
                     close all
-                    delete(app.Drug.Figure)
-                    %delete(app.SwiggleFigure)
+                    %delete(app.Drug.Figure)
+                    %delete(app.Swing.Figure)
                     %delete(app.OptoFigure)
                 case 'Cancel'
                     return

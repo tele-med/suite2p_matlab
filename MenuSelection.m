@@ -39,7 +39,9 @@ function file=MenuSelection(varargin) %PER IL MENU IMPORT
                 catch
                     app.txaB.Value='NO FILE SELECTED';
                 end
+                TimePointsCustomization(app)
            end
            file=app.file;
+           
 
         end 

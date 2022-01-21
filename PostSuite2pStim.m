@@ -7,21 +7,50 @@ function PostSuite2pStim(app,fs,correctionFactor,order,cut,ax,ax2)
 %indice suite2p da visualizzare 
 %possibile bottone per usare un cut factor ottenuto dal segnale medio di glut
 
-path=app.path;
+%path=app.path;
 
-try
-    newStr = extractBetween(path,'[',']');
-    splitted=split(newStr,'-');
-    str=str2double(splitted);
-    tF=str(1);
-    sub=str-tF;
-    idx=find(sub>20,1,'first');
-    tL=str(idx);
-catch
-    tF=size(app.in.F,2);
-end
+% list={};
+% newStr = extractBetween(path,'[',']');
+% splitted=split(newStr,'-');
+% str=str2double(splitted);
+% 
+% %finding all the intervals 
+% idx=1;
+% i=1;
+% while length(idx)>=1
+%     t(i)=str(idx);
+%     list{i}=[num2str(t(i))];
+%     sub=str-t(i);
+%     idx=find(sub>20,1,'first');
+%     i=i+1;  
+% end
+% %aggiungo la lunghezza del file per poter selezionare la fine
+% %del file come tL nel caso in cui il lavaggio non sia stato eseguito
+% 
+% list=[list,append(num2str(size(app.in.F,2)),'(end of the signal)')]; 
+% t=[t,size(app.in.F,2)]
+% answer = questdlg('Do you want to define the timepoints?(Not a DRUG+WASH-OUT default)',...
+%                   'Custom experiment','No','Yes','No');
+% switch answer
+%     case 'Yes'
+%         indxF= listdlg('PromptString','Select tDrug sample','SelectionMode','single','ListString',list);
+%         list=list(1,indxF+1:end);
+%         indxL = listdlg('PromptString','Select tWashOut sample','SelectionMode','single','ListString',list);
+%         tF=t(indxF)
+%         tL=t(indxL+indxF)
+%     case 'No'
+%         try 
+%            tL=t(2); 
+%            tF=t(1);
+%         catch
+%            tL=size(app.in.F,2);
+%            tF=size(app.in.F,2);
+%         end
+%         
+% end
 
-
+tF=app.tF;
+tL=app.tL;
 dFoverF=deltaFoverF(app.in.iscell,app.in.F,app.in.Fneu,correctionFactor,order,tF);
 time=0:1/fs:size(dFoverF,2)/fs;
 time(end)=[];
@@ -29,23 +58,23 @@ time=time/60;
 interval=zeros(size(time));
 interval(1,tF:tL)=1;
 
-%normalizzazione
-% norm=@(x) (2*(x-min(x))./(max(x)-min(x))-1); %normalizzare??????
-% dFNorm=norm(dFoverF)';
-dFNorm=dFoverF;
 
 %% divisione in gruppi
 
     cla(ax) %clear axes
     cla(ax2)
     
-    m=mean(dFNorm(:,tL-fs*60:tL)')';  %prendo solo i frame relativi a un minuto precedente il lavaggio (tL)
+    %prendo solo i frame relativi a un minuto precedente il lavaggio (tL)
+    %perché così lavoro su un momento in cui il comportamento della cellula
+    %si è assestato, dato che ho somministrato il farmaco molto prima e c'è
+    %stato il tempo di raggiungere una risposta "definitiva"
+    m=mean(dFoverF(:,tL-fs*60:tL)')';  
     
     idxU=m>cut;   %up se hanno un dFoverF>0.1 %indici MATLAB
-    dfUp=zeros(1,size(dFNorm,2));
+    dfUp=zeros(1,size(dFoverF,2));
     len=mat2str(sum(idxU));
     if sum(idxU)>1
-        dfUp=dFNorm(idxU,:);
+        dfUp=dFoverF(idxU,:);
         dfUp=mean(dfUp);
         plot(time,dfUp,'r','Parent',ax);
         str1=append('EXCITED ',len);
@@ -56,10 +85,10 @@ dFNorm=dFoverF;
     end
  
     idxD=m<-cut;  %down se hanno un dFoverF<-0.1
-    dfDown=zeros(1,size(dFNorm,2));
-    len=mat2str(sum(dfDown));
+    dfDown=zeros(1,size(dFoverF,2));
+    len=mat2str(sum(idxD));
     if sum(idxD)>1
-        dfDown=dFNorm(idxD,:);
+        dfDown=dFoverF(idxD,:);
         dfDown=mean(dfDown);
         plot(time,dfDown,'g','Parent',ax);
         str2=append('INHIBITED ',len);
@@ -72,10 +101,10 @@ dFNorm=dFoverF;
     end
 
     idx=m>=-cut & m<=cut; %middle
-    dfMiddle=zeros(1,size(dFNorm,2));
+    dfMiddle=zeros(1,size(dFoverF,2));
     len=mat2str(sum(idx));
     if sum(idx)>1
-        dfMiddle=dFNorm(idx,:);
+        dfMiddle=dFoverF(idx,:);
         dfMiddle=mean(dfMiddle);
         plot(time,dfMiddle,'b','Parent',ax)
         str3=append('NO RESP ',len);
@@ -94,7 +123,7 @@ dFNorm=dFoverF;
     title(sprintf('Gouping %d cells in excited-inhibited-no response',size(dFoverF,1)),'Parent',ax);
    
     %ALL CELLS
-    LineList = plot(time,dFNorm,'Parent',ax2);
+    LineList = plot(time,dFoverF,'Parent',ax2);
     set(LineList, 'ButtonDownFcn', {@myLineCallback, LineList,app});
 
     xlabel('Time [min]','Parent',ax2)

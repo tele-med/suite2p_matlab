@@ -14,6 +14,8 @@ classdef DrugClass <handle
         
         file
         path
+        tF
+        tL
         in
         idx_cell
         IDX
@@ -82,7 +84,7 @@ classdef DrugClass <handle
 
            %Buttons for file and directory selection
            buttonf = uibutton(grid2,'Text','Import .mat file');
-           buttonf.ButtonPushedFcn = @(src,event)MenuSelection(app,'m',buttonf);
+           buttonf.ButtonPushedFcn = @(src,event)MenuSelection(app,app.type,buttonf);
            buttonf.Layout.Column=[1,2];
            
            % frequency Label
