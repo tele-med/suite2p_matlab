@@ -60,7 +60,7 @@ movements=dataRaster.movements;
 
 %%
 
-ansMethod = questdlg('Select the number of the clustering method to be used', 'Select clustering method', 'PCA-promax','K-means','Hierarchical clustering','PCA-promax');
+ansMethod = questdlg('Select the clustering method to be used', 'Select clustering method', 'PCA-promax','K-means','Hierarchical clustering','PCA-promax');
 clustering.method=ansMethod;
 
 if strcmp(clustering.method,'PCA-promax')
@@ -109,11 +109,13 @@ if ~strcmp(clustering.method,'PCA-promax')
     num_lines = 1;
     def = {'2'};
     answer = inputdlg(window,dlg_title,num_lines,def);
-    clustering.nClust= str2num(answer{1});
-    
-    clustering.distanceMetric= questdlg('Select type of distance metric', 'Distance metric', 'euclidean','correlation','euclidean');
+    clustering.nClust= str2double(answer{1});
+    if strcmp(clustering.method,'K-means')
+        clustering.distanceMetric = questdlg('Select type of distance metric', 'Distance metric', 'euclidean','correlation','euclidean');
+    end
     if strcmp(clustering.method,'Hierarchical clustering')
-        clustering.linkageAlgorithm= questdlg('Algorithm for computing distance between clusters', 'Hierarchical clustering', 'single','complete','single');
+        clustering.linkageAlgorithm= questdlg('Algorithm for computing distance between clusters', 'Hierarchical clustering', 'single','complete','complete');
+        clustering.distanceMetric='correlation';
     end
     
 end
@@ -125,12 +127,11 @@ confSynchBinary=find(pValueBinary<0.05,1,'first');
 
 
 
-if strcmp(clustering.method,'PCA-promax') | strcmp(clustering.PCA,'Yes')
-    
+if strcmp(clustering.method,'PCA-promax') || strcmp(clustering.PCA,'Yes')
     
     [PCs,~,eigenvals]=princomp(rasterZTransf);
     maxEigenValPastur=(1+sqrt(size(raster,2)/size(raster,1)))^2;
-    minEigenValPastur=(1-sqrt(size(raster,2)/size(raster,1)))^2;
+    %minEigenValPastur=(1-sqrt(size(raster,2)/size(raster,1)))^2;
     correctionTracyWidom=size(raster,2)^(-2/3);
     
     smaller = eigenvals < maxEigenValPastur + correctionTracyWidom;
@@ -148,6 +149,8 @@ if strcmp(clustering.method,'PCA-promax') | strcmp(clustering.PCA,'Yes')
     
 end
 
+
+%k-means
 if strcmp(clustering.method,'K-means')
     
     if strcmp(clustering.distanceMetric,'euclidean')
@@ -164,17 +167,45 @@ if strcmp(clustering.method,'K-means')
         assembliesCells{i}=find(idx==i);
     end
    
+%dendrogram    
 elseif strcmp(clustering.method,'Hierarchical clustering')  
     if strcmp(clustering.PCA,'Yes')
         dists = pdist(PCs(:,1:cutOffPC),clustering.distanceMetric); %dists = pdist(data','correlation');
        
     else
-        dists = pdist(rasterZTransf',clustering.distanceMetric); %dists = pdist(data','correlation');
-        size(squareform(dists))
+        %cutoff= not used, instead we ask the number of cluster to the user
+        
+        %deleting the baseline trend
+        M=rasterZTransf;
+        b=detrend(M);
+        b=M-b;
+        Mb=M-b;
+        
+        %correlation
+        [c,lags]=xcorr(Mb,'normalized');
+        [m,i]=max(c);
+        dim=sqrt(size(c,2));
+        mmax=triu(reshape(m,dim,dim));
+        shifts=i-ceil(size(c,1)/2);
+        %shifts
+        shifts=triu(reshape(shifts,dim,dim));
+        
+        mmax(1:(dim+1):end) = 0; %diag=0 instead of 1 (max correlation)
+        corrMat=double(mmax);
+        dists = 1 - corrMat(find(corrMat))';
+        
+        %dists = pdist(rasterZTransf',clustering.distanceMetric); %dists = pdist(data','correlation');
+        %size(squareform(dists))
     end
     
     Z = linkage(dists,clustering.linkageAlgorithm);
-    idx = cluster(Z,clustering.nClust);
+    
+    figure
+    color = Z(end-clustering.nClust+2,3)-eps;
+    dendrogram(Z, 0, 'colorthreshold', color);
+    %dendrogram(Z,0,'colorthreshold',clustering.nClust)
+    
+    idx = cluster(Z,clustering.nClust); %in this way I'm costructing the clusters(groups). cluster.nClust is the cutoff
     assembliesCells=cell(clustering.nClust,1);
     for i=1:clustering.nClust
         assembliesCells{i}=find(idx==i);
@@ -183,7 +214,7 @@ end
 
 if strcmp(clustering.method,'PCA-promax')
     
-    [PCsRot, Rot]=rotatefactors(PCs(:,1:cutOffPC),'Method','promax','Maxit',5000);
+    [PCsRot,Rot]=rotatefactors(PCs(:,1:cutOffPC),'Method','promax','Maxit',5000);
     
     for i=1:size(PCsRot,2)
         PCsRot(:,i)=PCsRot(:,i)/norm(PCsRot(:,i));

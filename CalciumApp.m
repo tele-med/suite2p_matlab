@@ -46,12 +46,13 @@ classdef CalciumApp <handle
             
             [filename,pathname]=uigetfile('*.mat','Pick a "Fall.mat" file');
             
-            prompt={'Neuropil correction factor value:','Sampling rate [Hz]:'};
+            prompt={'Neuropil correction factor value:','Sampling rate [Hz]:',...
+                    'Interval to analize (i.e. 1,200)[sample]'};
             name1='Inputs';
             numlines=1;
-            defaultanswer={'0.9','1'};
+            defaultanswer={'0.9','1','all'};
             answer=inputdlg(prompt,name1,numlines,defaultanswer);
-            app.Swing=PlotSkew([pathname,filename],str2double(answer{1}),str2double(answer{2}));
+            app.Swing=PlotSkew([pathname,filename],str2double(answer{1}),str2double(answer{2}),answer{3});
             
         end
         

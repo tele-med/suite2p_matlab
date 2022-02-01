@@ -8,10 +8,10 @@ dissimilarity = 1 - corrMat(find(corrMat))';
 
 %# decide on a cutoff
 %# remember that 0.4 corresponds to corr of 0.6!
-cutoff = 0.05; 
+cutoff = 0.5; 
 
 %# perform complete linkage clustering
-Z = linkage(dissimilarity,'single');
+Z = linkage(dissimilarity,'complete');
 
 %# group the data into clusters
 %# (cutoff is at a correlation of 0.5)
@@ -20,27 +20,27 @@ groups = cluster(Z,'cutoff',cutoff,'criterion','distance');
 dendrogram(Z,0,'colorthreshold',cutoff)
 
 
-figure
-x=67;
-y=56;
-plot(deltaFoF(x,:))
-hold on
-plot(deltaFoF(y,:))
+% figure
+% x=8;
+% y=14;
+% plot(deltaFoF(x,:))
+% hold on
+% plot(deltaFoF(y,:))
+% 
 
-
-[m,idx]=max(corrMat);
-au=unique(idx);
+[m,ind]=max(corrMat);
+au=unique(ind);
 
 for i=1:length(au)
-    logic=idx==au(i);
+    logic=ind==au(i);
     indexes=find(logic==1);
-    group{1,i}=indexes;
+    group{1,i}=idx(indexes)-1;
     
     figure(i)
     plot(deltaFoF(i,:))
     hold on
     for j=1:length(indexes)
-        plot(deltaFoF(indexes(j),:))
+        plot(deltaFoF(id(indexes(j)),:))
         hold on
     end
 end

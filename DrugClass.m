@@ -128,7 +128,7 @@ classdef DrugClass <handle
            app.cut=0.5;
            app.cutField.Value = 0.5;
            
-           app.saveButton=uibutton(grid2,'Text','Save data');  %COLLEGA AL CALLBACK
+           app.saveButton=uibutton(grid2,'Text','Save data');  
            app.saveButton.Layout.Row=7;
            app.saveButton.Layout.Column=[1,2];
            app.saveButton.ButtonPushedFcn = @(src,event)saveFiles(app);

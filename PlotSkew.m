@@ -6,6 +6,7 @@ classdef PlotSkew <handle
         fs                  %acquisition frequency
         t                   %time vector
         in                  %input structure
+        interval
         
         ButtonI             %back button
         ButtonHelp
@@ -35,10 +36,13 @@ classdef PlotSkew <handle
         TextC               %text field for intresting cells
         txt                 %intresting indexes choosen by user
         ButtonH             %button for cell selection and plot
+        ButtonIdx           %button for printing the indexes of the cells in the FOV
+        ButtonSaveIdx       %button for saving the indexes of the cells in the FOV
         ButtonC             %button for clustering
         ButtonV             %button for variance filtering
         ButtonVis           %button for visualizing cells
         ButtonK             %button for keeping just the selected cells
+        ButtonD             %Button for deleting the selected cells
         ButtonRS            %button for choosing between random/skewness visualization
         ButtonCrop
         
@@ -53,22 +57,42 @@ classdef PlotSkew <handle
     
     methods
         
-        function app=PlotSkew(fileName,correctionFactor,fs)
+        function app=PlotSkew(fileName,correctionFactor,fs,interval)
            
             app.correctionFactor=correctionFactor;
             app.fileName=fileName; %il nome è Fall.mat, è il file che contiene tutti gli output di suite2p
             app.fs=fs;
             app.in=load(fileName);
             app.iscell=app.in.iscell;
+            app.interval=interval;
             
+            if strcmp(app.interval,'all')==0
+                interval=split(app.interval,',');
+                init=str2double(interval(1));
+                fin=str2double(interval(2));
+                if isnan(fin)==1
+                    fin=length(app.in.F);
+                end
+                app.in.F=app.in.F(:,init:fin);
+                app.in.Fneu=app.in.Fneu(:,init:fin);
+                app.in.spks=app.in.spks(:,init:fin);
+            end
+
             app.deltaFoF=deltaFoverF(app.iscell,app.in.F,app.in.Fneu,correctionFactor);
+            %normalization of dFoF in between -1 1
+            M=max(max(app.deltaFoF));
+            m=min(min(app.deltaFoF));
+            range = M - m;
+            m01 = (app.deltaFoF - m) / range;
+            app.deltaFoF=2 * m01 - 1;
+           
             %inizializzazione deltaFoverFskew con il deltaFoF totale
             app.deltaFoFskew=app.deltaFoF;
             
             %indici delle cellule (suite2p indexes but 1 based)
             app.idx_cell=find(app.iscell(:,1)==1); %REMEMBER in suite2p the idx=idx_cell-1
             %init of the skewness filtered indexes to all the
-            %cells indexes (in the suite2p coords but 1-based)
+            %cells indexes (in matlab coords,so 1-based --> s2pindexes=skewfilt_idx-1)
             app.skewfilt_idx=app.idx_cell;
             
             %stat delle sole cellule (stat of cells)
@@ -77,7 +101,6 @@ classdef PlotSkew <handle
             %filtered cells to the one of all the suite2p had found
             app.skew_cell=app.stat_cell;
             
-            
             app.t=0:1/app.fs:size(app.deltaFoF,2)/app.fs-1;
             app.t=app.t/60; %in minutes
             
@@ -85,11 +108,9 @@ classdef PlotSkew <handle
             for s=1:length(app.stat_cell)
                 app.skewlevel(1,s)=app.stat_cell{s}.skew;
             end
-                
-            
+
             app.initImage 
         end
-        
         
         function initImage(app)
             
@@ -99,12 +120,9 @@ classdef PlotSkew <handle
             app.s=image;
             skewnessHandling(app)
 
-
             app.imageIdx=image_idx;
-            
-            
+
         end
-        
         
         function showImage(app,image)
             % %PLOTTING THE MASKS IN RANDOM COLORS
@@ -115,11 +133,10 @@ classdef PlotSkew <handle
             imshow(rescale(image),'Colormap',mymap)
         end
 
-        
         function skewnessHandling(app)
             %PLOTTING THE SKEWNESS IMAGE
-            app.hFig=figure;
-            app.hFig.Name= 'Swing Cells Experiment';
+            app.hFig = figure;
+            app.hFig.Name = 'Swing Cells Experiment';
             mymap=[[1 1 1];jet];
            
             %perimeter of another color
@@ -132,9 +149,10 @@ classdef PlotSkew <handle
             
             maxSkew=round(max(max(app.skew)),1);
             middle=maxSkew/2;
+            minSkew=round(min(min(app.skew)),1);
             hcb=colorbar('Ticks',[-2,middle,maxSkew],'TickLabels',{'-2',mat2str(middle),mat2str(maxSkew)});
             set(get(hcb,'Title'),'String','Skewness')
-            caxis([-2 middle]) 
+            caxis([minSkew middle]) 
             
             app.hFig.Position=[400,100,800,500];
             axes=gca;
@@ -150,7 +168,7 @@ classdef PlotSkew <handle
             
             %text area for cell selection
             app.TextC=uicontrol('Parent',app.hFig,'Style','edit','Visible','on',...
-                'Position',[10,450,100,20],'String','#cell separated by commas','Units','Normalized');
+                'Position',[10,450,200,20],'String','#cell separated by commas','Units','Normalized');
                 
             app.ButtonVis=uicontrol('Parent',app.hFig,'Style','pushbutton','String','Visualize',...
                 'Position',[10,430,100,20],'Units','normalized','Visible','on',...
@@ -158,8 +176,19 @@ classdef PlotSkew <handle
             
             app.ButtonK=uicontrol('Parent',app.hFig,'Style','pushbutton','String','Keep this cells',...
                 'Position',[10,410,100,20],'Units','normalized','Visible','on',...
-                'CallBack',@(ButtonK,event)keepCells(app));
+                'CallBack',@(ButtonK,event)keepDeleteCells(app,0));
 
+            app.ButtonD=uicontrol('Parent',app.hFig,'Style','pushbutton','String','Delete this cells',...
+                'Position',[110,410,100,20],'Units','normalized','Visible','on',...
+                'CallBack',@(ButtonK,event)keepDeleteCells(app,1));
+            
+            app.ButtonIdx=uicontrol('Parent',app.hFig,'Style','pushbutton','String','Print Indexes',...
+                'Position',[10,390,100,20],'Units','normalized','Visible','on',...
+                'CallBack',@(ButtonK,event)printIdx(app,0));
+            app.ButtonSaveIdx=uicontrol('Parent',app.hFig,'Style','pushbutton','String','Save indexes',...
+                'Position',[110,390,100,20],'Units','normalized','Visible','on',...
+                'CallBack',@(ButtonK,event)printIdx(app,1));
+            
             %Add text area for skewness level
             app.TextH=uicontrol('Parent',app.hFig,'Style','edit','Visible','on',...
                 'Position',[10,20,100,20],'String','Skewness level','Units','Normalized',...
@@ -182,7 +211,6 @@ classdef PlotSkew <handle
                 'CallBack',@(src,event)croppingFunction(app));
          
         end
-        
         
         function skewnessLevelChanged(app)
             %textChanged callback function for the text field dedicated to the
@@ -298,7 +326,8 @@ classdef PlotSkew <handle
                 sign=A(i,:)+i;
                 plot(app.t,sign); 
                 hold on
-                x=round(length(sign)/3); y=i;
+                x=10;%round(length(sign)/3); 
+                y=i;
                 text(x,y,num2str(app.iLs2p(i,:))); %plotting the suite2p index on every trace
             end
             ylim([0 size(A,1)+2]);
@@ -351,8 +380,8 @@ classdef PlotSkew <handle
         
         function varianceHigh(app)
 
-            p80=prctile(app.variance,80);
-            iH=app.variance>p80;
+            p70=prctile(app.variance,70);
+            iH=app.variance>p70;
             s2pidx=app.skewfilt_idx(iH)-1;
             %varH=varianza(idxH);
             %skewH=app.skewlevel(iH);
@@ -396,7 +425,7 @@ classdef PlotSkew <handle
                     trace=traces(i,:);
                     plot(app.t,trace+i)
                     hold on
-                    text(app.t(length(app.t)/2),i,coords{i,3},'Color','m','FontSize',8);    
+                    text(app.t(ceil(length(app.t)/2)),i-0.5,coords{i,3},'Color','m','FontSize',8);    
                 end
                 begindex=endindex+1;
                 xlabel('time[min]')
@@ -406,14 +435,16 @@ classdef PlotSkew <handle
             
         end
 
-        function keepCells(app)
+        function keepDeleteCells(app,kd)
+            %if kd=0 i'm maintaining the cells indexed by the user 
+            %if kd=1 i'm deleting the cells indexed by the user
             
             idxs2p=str2double(split(app.TextC.String,','));
             if ~isnan(idxs2p)
                 indexes=idxs2p+1; %from suite2p to matlab indexing sys
                 ismemb=ismember(app.skewfilt_idx,indexes); %need to pass from the cells I want to keep to one I want get rid off
-                indexes=find(ismemb==0); %indexes of cells I want to eliminate
-
+                indexes=find(ismemb==kd); %indexes of cells I want to eliminate
+                
 
                 %image construction
                 for n=1:length(indexes)
@@ -428,7 +459,7 @@ classdef PlotSkew <handle
                 %updating variables
                 variablesUpdate(app,indexes)
 
-                app.TextC.String='#cell separated by a space';
+                app.TextC.String='#cell separated by a comma';
             
             end
             
@@ -456,6 +487,20 @@ classdef PlotSkew <handle
             
         end
         
+        function printIdx(app,type)
+            str=string(app.skewfilt_idx-1);
+            str=join(str,',');
+            if type==0
+                app.TextC.String=str;
+            else
+                filename=append(extractBefore(app.fileName,'Fall.mat'),'IntrestingIndexes',app.interval,'.txt');
+                fid = fopen(filename,'wt');
+                fprintf(fid, str);
+                fclose(fid);
+            end
+            
+        end
+        
         function indietro(app,figHandler)
             app.ButtonI=uicontrol('Parent',figHandler,'Style','pushbutton','String','<<Restart',...
                 'Position',[10,480,50,20],'Units','normalized','Visible','on',...
@@ -467,7 +512,7 @@ classdef PlotSkew <handle
         
         function buttonIndietro(app,figHandler)
             close(figHandler)
-            PlotSkew(app.fileName,app.correctionFactor,app.fs);
+            PlotSkew(app.fileName,app.correctionFactor,app.fs,app.interval);
         end
         
         
