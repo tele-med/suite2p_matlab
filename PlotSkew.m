@@ -2,6 +2,7 @@ classdef PlotSkew <handle
     
     properties
         fileName            %'Fall.mat'
+        path
         correctionFactor    %alpha multiplicative factor for Fcorr=Fraw-alpha*Fneu
         fs                  %acquisition frequency
         t                   %time vector
@@ -52,16 +53,26 @@ classdef PlotSkew <handle
         
         iL                  %indexes of cells with variance>percentile25
         iLs2p               %indexes according to suite2p metrics
+        
+        peaksOrig
+        peaksNew
+        indexesOrig
+        indexesNew
+        coeff
+        ButtonPeak
+        M
     end
     
     
     methods
         
-        function app=PlotSkew(fileName,correctionFactor,fs,interval)
+        function app=PlotSkew(path,fileName,correctionFactor,fs,interval)
            
             app.correctionFactor=correctionFactor;
             app.fileName=fileName; %il nome è Fall.mat, è il file che contiene tutti gli output di suite2p
+            app.path=path;
             app.fs=fs;
+            cd(app.path);
             app.in=load(fileName);
             app.iscell=app.in.iscell;
             app.interval=interval;
@@ -150,7 +161,7 @@ classdef PlotSkew <handle
             maxSkew=round(max(max(app.skew)),1);
             middle=maxSkew/2;
             minSkew=round(min(min(app.skew)),1);
-            hcb=colorbar('Ticks',[-2,middle,maxSkew],'TickLabels',{'-2',mat2str(middle),mat2str(maxSkew)});
+            hcb=colorbar('Ticks',[minSkew,middle,maxSkew],'TickLabels',{mat2str(minSkew),mat2str(middle),mat2str(maxSkew)});
             set(get(hcb,'Title'),'String','Skewness')
             caxis([minSkew middle]) 
             
@@ -210,6 +221,8 @@ classdef PlotSkew <handle
             app.ButtonCrop=uicontrol('Parent',app.hFig,'Style','pushbutton','String','CropImage','Position',[400,20,100,20],'Units','normalized','Visible','on',...
                 'CallBack',@(src,event)croppingFunction(app));
          
+            app.ButtonPeak=uicontrol('Parent',app.hFig,'Style','pushbutton','String','PeakDetection','Position',[520,20,100,20],'Units','normalized','Visible','on',...
+                'CallBack',@(src,event)askCoefPeak(app));
         end
         
         function skewnessLevelChanged(app)
@@ -390,7 +403,7 @@ classdef PlotSkew <handle
         end
         
         function intrestingCells(app)
-            %app.txt=[];
+            
             j=findall(gca,'Type','Text');
             delete(j);
             
@@ -501,6 +514,103 @@ classdef PlotSkew <handle
             
         end
         
+        function askCoefPeak(app)
+            prompt={'Cutoff scaling coefficient value:'};
+            name='Enter the cutoff';
+            numlines=1;
+            defaultanswer={'2'};
+            answer=inputdlg(prompt,name,numlines,defaultanswer);  
+            app.coeff=str2double(answer{1});
+            peakTool(app)
+        end
+        
+        function peakTool(app)
+            M=app.deltaFoFskew';
+            app.M=M;
+            numberOfCell=size(M,2)
+            b=detrend(M);
+            b=M-b;
+            Mb=M-b;
+            smoothed_m = conv2(Mb, ones(3)/20, 'same');
+            diff=Mb-smoothed_m;
+            p5  = prctile(diff,5); %5th percentile
+            p95 = prctile(diff,95); %95th percentile to find the threshold
+            
+            for i=1:size(diff,2)
+                signal=diff(:,i);
+                intervallo=find(signal>p5(i) & signal<p95(i));
+                m(1,i)=mean(signal(intervallo));
+                stdev(1,i)=std(signal(intervallo));
+            end
+            Fcut=m+app.coeff*stdev;
+            smooth = sgolayfilt(double(diff),7,21);
+
+            for i=1:size(smooth,2)
+                [index,peak]=PeaksDetector(smooth(:,i),Fcut(i));
+                app.indexesOrig{i}=index;
+                app.peaksOrig{i}=peak;
+            end
+            
+            app.indexesNew=app.indexesOrig;
+            app.peaksNew=app.peaksOrig;
+            saveStruct(app);
+            
+            %plot part, the j index controls the number of figures, in
+            %which we have 4 subplot boxes regulated by k.
+            %the i index controls the dFoFskew trace we are working on 
+            i=1;
+            for j=1:round(size(smooth,2)/4)
+
+               if i>size(smooth,2)
+                   break
+               end
+
+               figPeak=figure;
+
+               for k=1:4
+                    ax(k) = subplot(2,2,k);
+
+                    h1=plot(smooth(:,i));
+                    hold on
+
+                    for id=1:length(app.indexesOrig{i})
+                        PeaksList = plot(app.indexesOrig{i}(id),app.peaksOrig{i}(id),'*r');
+                        set(PeaksList, 'ButtonDownFcn', {@deleteExistingPeak,i,PeaksList,app}); %delete an existing peak
+                    end
+
+                    h1.ButtonDownFcn = {@showZValueFcn,i,app}; %add a new peak
+                    
+                    i=i+1;
+                    if i>size(smooth,2)
+                        break
+                    end
+               end
+
+
+               uicontrol('Parent',figPeak,'Style','pushbutton','String','SaveChanges',...
+                         'Position',[1,1,100,20],'Units','normalized','Visible','on',...
+                         'CallBack',@(src,event)savePeaks(app)); %CALLBACK FOR SAVING
+
+               %i=i+1;
+            end
+        end
+        
+        function savePeaks(app)
+            %SUBSTITUTE THE ORIGINAL WITH THE NEW ONE ON WHICH THE
+            %MODIFICATIONS HAD BEEN APPLIED
+            app.peaksOrig=app.peaksNew;
+            app.indexesOrig=app.indexesNew;
+            saveStruct(app);
+            
+        end
+        
+        function saveStruct(app)
+            %%SAVE PEAKS
+            peak.originalTraces=app.M;
+            peak.indexes=app.indexesOrig;
+            save(app.fileName,'peak','-append');
+        end
+        
         function indietro(app,figHandler)
             app.ButtonI=uicontrol('Parent',figHandler,'Style','pushbutton','String','<<Restart',...
                 'Position',[10,480,50,20],'Units','normalized','Visible','on',...
@@ -512,9 +622,20 @@ classdef PlotSkew <handle
         
         function buttonIndietro(app,figHandler)
             close(figHandler)
-            PlotSkew(app.fileName,app.correctionFactor,app.fs,app.interval);
+            PlotSkew(app.path,app.fileName,app.correctionFactor,app.fs,app.interval);
         end
         
+        
+        
+        
+%         %%%figure
+%            i=1;
+%            trace=round(peak.originalTraces(:,i),2);
+%            index=round(peak.indexes{i},2);
+%            plot(trace)
+%            hold on
+%            plot(index,trace(index),'*r')
+            %BOTTONE LOAD EXISTING PEAKS
         
   end
     

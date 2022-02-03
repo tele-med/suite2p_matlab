@@ -181,7 +181,7 @@ classdef DrugClass <handle
             s2pidx=Midx-1;
             app.deleted=[app.deleted,s2pidx];
             app.in.iscell(Midx,1)=0; %cancello la cellula 
-            app.idx_cell(app.IDX)=[]; %??
+            app.idx_cell(app.IDX)=[]; 
             PostSuite2pStim(app,app.fs,app.correctionFactor,app.order,app.cut,app.ax,app.ax2);
             
             h=app.saveButton;

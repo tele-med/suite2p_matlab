@@ -52,7 +52,7 @@ classdef CalciumApp <handle
             numlines=1;
             defaultanswer={'0.9','1','all'};
             answer=inputdlg(prompt,name1,numlines,defaultanswer);
-            app.Swing=PlotSkew([pathname,filename],str2double(answer{1}),str2double(answer{2}),answer{3});
+            app.Swing=PlotSkew(pathname,filename,str2double(answer{1}),str2double(answer{2}),answer{3});
             
         end
         

@@ -9,7 +9,9 @@ M=deltaFoF';
 
 %Eventuale sottogruppo di cellule interessanti ottenute a partire da indici
 %suite2p
-idx=[32,35,37,38,55,58,70,73,74,105,109,115,149,176,178,180,182,192,199,203,231,241,249,277,313,323,325]+1;
+idx=[0,2,6,7,10,18,20,21,22,28,30,32,37,38,43,45,47,55,58,70,73,...
+    74,79,89,105,109,115,117,129,143,145,149,160,162,176,178,180,...
+    182,192,199,203,216,231,241,249,247,277,313,319,323,325]+1;
 idx_cell=find(iscell(:,1)==1); 
 for i=1:length(idx)
     id(1,i)=find(idx_cell==idx(i));
@@ -26,8 +28,8 @@ Mb=M-b;
 % iH=find(app.variance>p75);
 % %s2pidx=app.skewfilt_idx(iH)-1; %controlla gli indici quando integri nella
 % %GUI
-% 
-% hightCells=Mb(:,iH); %devo lavorare sulle tracce prive di pendenza
+
+hightCells=Mb(:,iH); %devo lavorare sulle tracce prive di pendenza
 
 %% divisione 
 

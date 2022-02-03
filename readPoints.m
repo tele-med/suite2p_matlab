@@ -1,12 +1,16 @@
 function [pts,idx] = readPoints(stat_cell,idx_cell)
 %readPoints   Read manually-defined points from image
-%   POINTS = READPOINTS(IMAGE) displays the image in the current figure,
-%   then records the position of each click of button 1 of the mouse in the
-%   figure, and stops when another button is clicked. The track of points
+%   POINTS = READPOINTS(stat_cell,idx_cell) 
+%   records the position of each click of button 1 of the mouse in the
+%   current figure, and stops when another button is clicked. The track of points
 %   is drawn as it goes along. The result is a 2 x NPOINTS matrix; each
 %   column is [X; Y] for one point.
 % 
-%   POINTS = READPOINTS(N) reads up to N points only.
+%   INPUTS: stat_cell, is the structure with the statistics computed on the
+%           cells. Input [] if you don't need to use within the cell image
+%           idx_cell, is the array containing the indexes of the cells in in
+%           matlab coords,so 1-based. Input [] if don't needed.
+%
 
 j=findall(gca,'Type','Text');
 delete(j);
@@ -28,8 +32,8 @@ while 1
         break
     end
     k = k + 1;
-    pts(1,k) = xi;
-    pts(2,k) = yi;
+    pts(1,k) = xi
+    pts(2,k) = yi
     
     for i=1:length(stat_cell)
         if ismember(round(yi),stat_cell{1,i}.ypix) && ismember(round(xi),stat_cell{1,i}.xpix)
@@ -38,11 +42,14 @@ while 1
     end
 
       if xold
-          h(k)=plot([xold xi], [yold yi],'.');  % draw. 'go-' to have the ----
+          h(k)=plot([xold xi], [yold yi],'k.');  % draw. 'go-' to have the ----
       else
-          h(k)=plot(xi, yi,'.');         % first point on its own  
+          h(k)=plot(xi, yi,'k.');         % first point on its own  
       end
-      j(k)=text(xi,yi,num2str(idx_cell(idx(1,k))-1),'FontSize',6,'Color',[0.3 0.7 0.9]);
+      
+      if length(idx_cell)>1
+        j(k)=text(xi,yi,num2str(idx_cell(idx(1,k))-1),'FontSize',6,'Color',[0.3 0.7 0.9]);
+      end
       
       if isequal(k, n)
           break

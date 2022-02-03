@@ -1,10 +1,13 @@
 function [indici,picchi]=PeaksDetector(sig,soglia)
 %funzione che restituisce gli indici dei picchi(come vettore colonna) e il valore dei
 %picchi (l'altezza) e plotta i picchi stessi
-%sul segnale. L'input della funzione è il segnale stesso. Funziona su
-%segnali che hanno il valore medio in un valore compreso tra -1 e +1 circa.
-%IL PRIMO IF ELIMINA L'OFFSET DAL SEGNALE.
-
+%sul segnale.
+%inputs:
+%segnale-> Funziona su segnali che hanno il valore medio in un valore compreso tra -1 e +1 circa.
+%         IL PRIMO IF ELIMINA L'OFFSET DAL SEGNALE.
+%soglia-> Cutoff sopra il quale il peak detector incomincia la ricerca di
+%         picchi
+%
 
 L=length(sig);
 
@@ -30,24 +33,34 @@ for i=1:L
     end
 end
 
+if count==0
+    msg='Lower the treshold';
+    error(msg);
+end
 
- for i=1:L-1
+for i=1:L-1
 if C(i)==0
-    if C(i+1)>0
+    if C(i+1)~=0
     ind(1,i)=i+1;
     end
 end
 end
 ind(ind==0)=[];
 
-distanza=floor(min(diff(ind))); %minimo n0 dei campioni presenti tra un campione diverso da 
+d=diff(ind);
+if length(d)==0
+    d=0;
+end
+distanza=floor(min(d)); %minimo n0 dei campioni presenti tra un campione diverso da 
                                  %zero e il successivo arrotondato al
                                  %valore + piccolo
+                                 
+                                 
 distanzaultimo=L-ind(1,end);    %distanza tra lunghezza del segnale e primo campione
                                 %dell'ultima sequenza di indici diversi da 0 
                                
 if distanza>=distanzaultimo
-    distanza=distanzaultimo
+    distanza=distanzaultimo;
 end
 %ho fatto questo perché se tra l'ultimo campione utile e la fine del
 %segnale ho meno campioni rispetto alla media che generalmente li
@@ -98,12 +111,8 @@ end
 
 
 %modo per non plottare gli offset ma devi eliminare i campioni in più
-   
 indici=indici';
-picchi=Mr;
-% figure
-% plot(sig)
-% hold on
-% plot(indici,Mr,'*r')
+picchi=sig(indici);
+
 
 end
