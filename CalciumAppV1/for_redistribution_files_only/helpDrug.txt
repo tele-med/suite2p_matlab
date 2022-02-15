@@ -1,0 +1,30 @@
+HELP FILE:
+This window is dedicated to the analysis of experiments in which a drug or farmacological molecul had been applied to the slice.
+
+*****************************************************************************************
+Configuration Panel
+*Import .mat file - opens a window to select the Fall.mat file exported from Suite2P
+*sampling rate - the frame rate used during acquisition
+*LP filter order - specifies how "strong" will be the low pass filter. The higher this parameter will be set, the strongest will be the smooting
+  of the signals. The default is 5
+*cut treshold - it's the treshold that defines the level of mean dF/F activity that a cell must exceed to be considered as an excited one.
+  Automatically this value will be used in negative to define the inhibition threshold. All the eventual cells falling in between the negative
+  and positive cut values will be classified as no responsive cells.
+*RUN/RESTART - runs the analysis for the first time or restarts the analysis from the beginning (without the need to re-load the .mat file) if 
+  you notice some errors.
+*Save data -  it's the button for saving eventual cell deletion, to save a Up-Middle-Down-time-intervals.txt file (see below), the .png picture
+  of the cells divided in groups according to their activity and the eventual deletedCells.txt file.
+
+******************************************************************************************
+Figures
+1. The first plot shows the division in excited-inhibited-no response cells. (dF/F traces obtained averaging the single dF/F traces of the cells belonging to the      same group).
+2. The second plot shows all the overlayed single dF/F traces. You can click on each of these, in order to select them and have a better look of their shape. The        selection leads the trace to change its width. By clicking on the DELETE TRACE button you can delete the trace you have selected. Automatically the figure 1       will update with the new group division. To save permanently the results and have a reminder of the indexes of the deleted traces you have to SAVE the         modifications by clicking on the save button. As a reminder, the run button will change its color in red and then in green after the save process has ended.
+     After you save your modifications two things happen: the suite2p Fall.mat file changes, so you won't find anymore the deleted cells in the cell group in      Suite2P GUI. On the countrary, the deleted cells will be included in the not cells group (right plot in suite2p main window). If you want to recover the deleted        traces use the deletedCells.txt file in which are saved the cells indexes you can search for in suite2p GUI.
+    
+******************************************************************************************
+Output files:
+*Up-Middle-Down-time-intervals.txt = contains a matrix in which the 1st column is the average dFoverF trace of the excited group, the 2nd column is the no response dFoverF averaged trace, the 3rd column is the inhibition group dFoverF average trace, the 4th column is the time (in minutes), the 5th column is an array filled with ones in the drug application period samples and zeros otherwise.
+*Groups.png = is the .png picture of the group division.
+*deletedCells.txt = contains the suite2p indexes of the eventually deleted traces. 
+
+    

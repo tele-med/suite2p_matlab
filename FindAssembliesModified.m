@@ -19,15 +19,8 @@ function [assembliesCells, matchIndexTimeSeries, matchIndexTimeSeriesSignificanc
 [filename,pathname] = uigetfile({'*_RASTER.mat';'*_RASTER.MAT'},'Open file with raster data', 'MultiSelect', 'off');
 filenameRASTER=fullfile(pathname,filename);
 
-cutName=strfind(filenameRASTER,'_RASTER.mat');
-% if isempty(cutName)
-%     cutName=strfind(filenameRASTER,'_MultiPlane_RASTER.mat');
-%     filenameALL_CELLS=[filenameRASTER(1:cutName-1) '_MultiPlane_ALL_CELLS.mat'];
-%     %outputFile=[filenameRASTER(1:cutName-1) '_MultiPlane_CLUSTERS.mat'];
-% else
-%    filenameALL_CELLS=[filenameRASTER(1:cutName-1) '_ALL_CELLS.mat'];
-    %outputFile=[filenameRASTER(1:cutName-1) '_CLUSTERS.mat'];
-% end
+%cutName=strfind(filenameRASTER,'_RASTER.mat');
+
 
 dataRaster=load(filenameRASTER);
 % if exist(filenameALL_CELLS, 'file') == 2

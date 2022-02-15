@@ -44,6 +44,7 @@ Click on the "Keep this cells" button if you want to maintain just these cells.
 Use it if you want to work on the cells of a specific area of the FOV.
 You can both select an area you want to work on or an area you want to exlude from further analysis.
 After you selected the area you have to right click on it to delete the selection mask.
+&
 
 
 

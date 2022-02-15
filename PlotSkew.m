@@ -59,8 +59,11 @@ classdef PlotSkew <handle
         indexesOrig
         indexesNew
         coeff
-        ButtonPeak
+        ButtonPeak          %to find peaks on a new signal
+        ButtonExistingPeak  %to load already calculated peaks
         M
+        freq                %frequency of events 
+        %frequencies        %texts with frequencies
     end
     
     
@@ -112,7 +115,9 @@ classdef PlotSkew <handle
             %filtered cells to the one of all the suite2p had found
             app.skew_cell=app.stat_cell;
             
-            app.t=0:1/app.fs:size(app.deltaFoF,2)/app.fs-1;
+            app.t=0:1:size(app.deltaFoF,2)-1;
+            app.t=app.t/app.fs;
+            %0:1/app.fs:size(app.deltaFoF,2)/app.fs-1;
             app.t=app.t/60; %in minutes
             
             %levels of skewness of each cell
@@ -223,6 +228,9 @@ classdef PlotSkew <handle
          
             app.ButtonPeak=uicontrol('Parent',app.hFig,'Style','pushbutton','String','PeakDetection','Position',[520,20,100,20],'Units','normalized','Visible','on',...
                 'CallBack',@(src,event)askCoefPeak(app));
+            
+            app.ButtonExistingPeak=uicontrol('Parent',app.hFig,'Style','pushbutton','String','LoadPeaks','Position',[520,1,100,20],'Units','normalized','Visible','on',...
+                'CallBack',@(src,event)loadPeaks(app));
         end
         
         function skewnessLevelChanged(app)
@@ -525,12 +533,12 @@ classdef PlotSkew <handle
         end
         
         function peakTool(app)
-            M=app.deltaFoFskew';
-            app.M=M;
-            numberOfCell=size(M,2)
-            b=detrend(M);
-            b=M-b;
-            Mb=M-b;
+            app.TextC.String='#cell separated by commas';
+            app.M=app.deltaFoFskew';
+            numberOfCell=size(app.M,2);
+            b=detrend(app.M);
+            b=app.M-b;
+            Mb=app.M-b;
             smoothed_m = conv2(Mb, ones(3)/20, 'same');
             diff=Mb-smoothed_m;
             p5  = prctile(diff,5); %5th percentile
@@ -547,8 +555,9 @@ classdef PlotSkew <handle
 
             for i=1:size(smooth,2)
                 [index,peak]=PeaksDetector(smooth(:,i),Fcut(i));
-                app.indexesOrig{i}=index;
+                app.indexesOrig{i}=index/(app.fs*60);
                 app.peaksOrig{i}=peak;
+                app.freq(i)=length(index)/app.t(end);   
             end
             
             app.indexesNew=app.indexesOrig;
@@ -561,25 +570,25 @@ classdef PlotSkew <handle
             i=1;
             for j=1:round(size(smooth,2)/4)
 
-               if i>size(smooth,2)
-                   break
-               end
+%                if i>size(smooth,2)
+%                    break
+%                end
 
                figPeak=figure;
 
                for k=1:4
                     ax(k) = subplot(2,2,k);
 
-                    h1=plot(smooth(:,i));
+                    h1=plot(app.t,smooth(:,i));
                     hold on
-
+                   
                     for id=1:length(app.indexesOrig{i})
                         PeaksList = plot(app.indexesOrig{i}(id),app.peaksOrig{i}(id),'*r');
                         set(PeaksList, 'ButtonDownFcn', {@deleteExistingPeak,i,PeaksList,app}); %delete an existing peak
                     end
-
                     h1.ButtonDownFcn = {@showZValueFcn,i,app}; %add a new peak
-                    
+                    xlabel('time') 
+                    ylabel('dF/F with peaks') 
                     i=i+1;
                     if i>size(smooth,2)
                         break
@@ -590,24 +599,25 @@ classdef PlotSkew <handle
                uicontrol('Parent',figPeak,'Style','pushbutton','String','SaveChanges',...
                          'Position',[1,1,100,20],'Units','normalized','Visible','on',...
                          'CallBack',@(src,event)savePeaks(app)); %CALLBACK FOR SAVING
-
-               %i=i+1;
             end
         end
         
         function savePeaks(app)
             %SUBSTITUTE THE ORIGINAL WITH THE NEW ONE ON WHICH THE
             %MODIFICATIONS HAD BEEN APPLIED
+            
             app.peaksOrig=app.peaksNew;
+            app.indexesOrig=[];
             app.indexesOrig=app.indexesNew;
             saveStruct(app);
-            
         end
         
         function saveStruct(app)
             %%SAVE PEAKS
+            clear peak;
             peak.originalTraces=app.M;
             peak.indexes=app.indexesOrig;
+            
             save(app.fileName,'peak','-append');
         end
         
@@ -625,17 +635,39 @@ classdef PlotSkew <handle
             PlotSkew(app.path,app.fileName,app.correctionFactor,app.fs,app.interval);
         end
         
-        
-        
-        
-%         %%%figure
-%            i=1;
-%            trace=round(peak.originalTraces(:,i),2);
-%            index=round(peak.indexes{i},2);
-%            plot(trace)
-%            hold on
-%            plot(index,trace(index),'*r')
-            %BOTTONE LOAD EXISTING PEAKS
+        function loadPeaks(app)
+            try
+                load(app.fileName,'peak')
+                i=1;
+                for j=1:round(size(app.in.peak.originalTraces,2)/4)
+                    figure
+
+                    for k=1:4
+                        trace=round(peak.originalTraces(:,i),2);
+                        index=peak.indexes{i};
+
+                        subplot(2,2,k);
+
+                        plot(app.t,trace);
+                        hold on
+                        id=round(index*app.fs*60);
+                        plot(index,trace(id),'*r');
+                        xlabel('time') 
+                        ylabel('dF/F with peaks') 
+                        i=i+1;
+                        if i>size(app.in.peak.originalTraces,2)
+                            break
+                        end
+                    end
+                end
+            catch e %e is an MException struct
+                fprintf(1,'The identifier was:\n%s',e.identifier);
+                fprintf(1,'There was an error! The message was:\n%s',e.message);
+                app.TextC.String='No peaks founded, run PeakDetection';
+            end
+
+        end
+
         
   end
     

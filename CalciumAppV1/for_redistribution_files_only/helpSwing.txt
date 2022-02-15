@@ -1,0 +1,49 @@
+HELP FILE:
+
+The central image shows the cells masks exported from suite2p.
+The colormap reflects their skewness level, which can be used to identify how much outliers has the cell fluorescence signal.
+
+The fluorescence traces showed in this GUI are all dF/F signals to which a LP filter has been applied to lower the noise contribution.
+**********************************************UPPER LEFT PANEL*******************************************
+********************************************buttons description******************************************
+*********************************************************************************************************
+
+**Text area "#cell separated by commas":
+Insert the cell indexes separted by commas (i.e 0,3,32) and press one of the buttons below.
+**Button "Visualize":
+Press it to visualize the fluorescence traces of the selected cells.
+**Button "Keep this cells":
+Press it to maintain just the cells you have chosen before.
+
+
+*********************************************LOWER PANEL*************************************************
+*****************************************buttons description*********************************************
+*********************************************************************************************************
+**Text Area "Skewness Level"
+You can both specify just one or two values of skewness separated by comma(i.e. 0.8 or 0.8,2).
+In the firs case, specifying a cut level of 0.8 you will delete all the cells with
+a skewness level that is lower than 0.8.
+In the second case, specifying 2 cut levels, you will maintain the cells which
+skewness falls in the external interval (the cells with skew<0.8 and those with skew>2).
+Press enter to have an update of the image.
+**Select Cells
+Press this button and move the mouse to the image, a pointer will appear.
+Click on the cells you want to wisualize the fluorescenze trace with a left click.
+Once you selected all the cells you are intrested in right click to see the dF/F traces.
+**Clustering
+Press the button and choose the clustering type you want to perform.
+**Variance Filtering
+Here you can both choose to go on with a:
+-Low VF, means that a new figure will appear showing you all the traces with low variance, in order to get rid off of these cells.
+Type the indexes of the cells you want to MANTAIN (optional) in the upper left field.
+Push on the "Filter cells" button to delete all the low variance cells showed in this window.
+-High VF, means that the indexes of all the traces with a high variance will appear in the main figure, in the upper left text area.
+Click on the "Visualize" button to see their fluorescence signals plotted.
+Click on the "Keep this cells" button if you want to maintain just these cells.
+**CropImage
+Use it if you want to work on the cells of a specific area of the FOV.
+You can both select an area you want to work on or an area you want to exlude from further analysis.
+After you selected the area you have to right click on it to delete the selection mask.
+
+
+

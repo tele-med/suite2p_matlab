@@ -19,7 +19,6 @@ n = Inf;
 pts = zeros(2, 1);
 idx = zeros(1,1);
 
-
 xold = 0;
 yold = 0;
 k = 0;

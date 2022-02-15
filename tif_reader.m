@@ -35,8 +35,8 @@ if length(eliminated)>0
     newName = append(extractBefore(filename,'.tif'),strrep(mat2str(eliminated),' ','-'),'.tif');
     newName=fullfile(destFolder,newName);
     imwrite(totalImage(:,:,1), newName);
-for i = 2:size(totalImage, 3) %append the rest of the slices
-    imwrite(totalImage(:, :, i),newName, 'WriteMode', 'append');
+    for i = 2:size(totalImage, 3) %append the rest of the slices
+        imwrite(totalImage(:, :, i),newName, 'WriteMode', 'append');
     end
 end
 
