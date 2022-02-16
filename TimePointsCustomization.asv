@@ -40,9 +40,16 @@ switch answer
         
 end
 
-app.deltaFoF=deltaFoverF(app.in.iscell,app.in.F,app.in.Fneu,app.correctionFactor,app.order,app.tF);
+prompt = {'Sampling Frequency in Hz:'};
+dlgtitle = 'Fs [Hz]';
+dims = [1 100];
+definput = {'1'};
+answer = inputdlg(prompt,dlgtitle,dims,definput);
 
-app.t=0:1/app.fs:size(app.deltaFoF,2)/app.fs;
+app.dFoverF=deltaFoverF(app.in.iscell,app.in.F,app.in.Fneu,correctionFactor,order,tF);
+%Quando definirai gli intervalli da analizzare dovrai passare a deltaFoverF
+%app.in.F(inizio:fine) e app.in.Fneu(inizio:fine)
+app.t=0:1/app.fs:size(app.dFoverF,2)/app.fs;
 app.t(end)=[];
 app.t=app.t/60;
 end

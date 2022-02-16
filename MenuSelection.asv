@@ -42,6 +42,7 @@ function file=MenuSelection(varargin) %PER IL MENU IMPORT
                 end
                 TimePointsCustomization(app); %Here app.tF and app.tL are choosen
                 
+                %Photobleaching(app);
            end
            file=app.file;
            

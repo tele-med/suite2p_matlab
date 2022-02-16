@@ -9,7 +9,6 @@ classdef Photobleaching <handle
         YL
         YE
         Y
- 
     end
     
     methods
@@ -19,7 +18,6 @@ classdef Photobleaching <handle
             media=mean(parent.deltaFoF);
             subplot(2,2,[1,3])
             plot(parent.t,media);
-            hold on
             title('mean(dF/F)')
             xlabel('t')
             ylabel('dF/F')
@@ -46,7 +44,6 @@ classdef Photobleaching <handle
             M=mean(cl.taglio);
             cl.taglio=[media(1,1:inizio),M*ones(1,pad),media(1,fine:end)]';
             cl.YE=expsmooth(cl.taglio,1,100);
-            cl.Y=cl.YE;
 
             subplot(2,2,2);
             plot(time,cl.taglio,'y')
@@ -69,7 +66,7 @@ classdef Photobleaching <handle
         end
 
         function pointSelection(cl,time)
-            [x,y] = getpts(cl.ax)
+            [x,y] = getpts(cl.ax);
             m=(y(2)-y(1))/(x(2)-x(1));
             q=y(1)-m*x(1);
             cl.YL=m*time+q;
@@ -99,15 +96,14 @@ classdef Photobleaching <handle
 
         function confirm(cl,parent)
             if size(parent.deltaFoF,2)==size(cl.Y,2)
-                pb=cl.Y;
+                Y=cl.Y;
             else
-                pb=cl.Y';
+                Y=cl.Y';
             end
-                parent.deltaFoF=parent.deltaFoF-pb;
-                
+                parent.deltaFoF=parent.deltaFoF+Y;
+                hold on;
                 media=mean(parent.deltaFoF);
-                
-                plot(cl.ax, parent.t,media,'--');
+                plot(cl.ax, parent.t,media);
             
         end
             

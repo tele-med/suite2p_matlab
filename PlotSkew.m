@@ -76,6 +76,10 @@ classdef PlotSkew <handle
             app.path=path;
             app.fs=fs;
             cd(app.path);
+            if ~exist('MatlabResults', 'dir')
+                mkdir('MatlabResults')
+                sprintf('MatlabResults folder created')
+            end
             app.in=load(fileName);
             app.iscell=app.in.iscell;
             app.interval=interval;
@@ -347,7 +351,7 @@ classdef PlotSkew <handle
                 sign=A(i,:)+i;
                 plot(app.t,sign); 
                 hold on
-                x=10;%round(length(sign)/3); 
+                x=app.t(round(length(app.t)/2));
                 y=i;
                 text(x,y,num2str(app.iLs2p(i,:))); %plotting the suite2p index on every trace
             end
@@ -361,7 +365,7 @@ classdef PlotSkew <handle
                   'Value',1,'Callback',{@slider_callback1,panel2});
                
             %callback to scroll up/down
-            function slider_callback1(src,eventdata,arg1)
+            function slider_callback1(src,event,arg1)
                 val = get(src,'Value');
                 set(arg1,'Position',[0 -val 1 2])
             end
@@ -514,7 +518,7 @@ classdef PlotSkew <handle
             if type==0
                 app.TextC.String=str;
             else
-                filename=append(extractBefore(app.fileName,'Fall.mat'),'IntrestingIndexes',app.interval,'.txt');
+                filename=append('MatlabResults/',extractBefore(app.fileName,'Fall.mat'),'IntrestingIndexes',app.interval,'.txt');
                 fid = fopen(filename,'wt');
                 fprintf(fid, str);
                 fclose(fid);
@@ -619,20 +623,7 @@ classdef PlotSkew <handle
             peak.indexes=app.indexesOrig;
             
             save(app.fileName,'peak','-append');
-        end
-        
-        function indietro(app,figHandler)
-            app.ButtonI=uicontrol('Parent',figHandler,'Style','pushbutton','String','<<Restart',...
-                'Position',[10,480,50,20],'Units','normalized','Visible','on',...
-                'CallBack',@(ButtonH,event)buttonIndietro(app,figHandler));
-            app.ButtonHelp=uicontrol('Parent',figHandler,'Style','pushbutton','String','Help',...
-                'Position',[60,480,50,20],'Units','normalized','Visible','on',...
-                'CallBack',@(ButtonH,event)openHelp('helpSwing.txt'));
-        end
-        
-        function buttonIndietro(app,figHandler)
-            close(figHandler)
-            PlotSkew(app.path,app.fileName,app.correctionFactor,app.fs,app.interval);
+            fprintf('peak saved')
         end
         
         function loadPeaks(app)
@@ -667,8 +658,21 @@ classdef PlotSkew <handle
             end
 
         end
-
         
+        function indietro(app,figHandler)
+            app.ButtonI=uicontrol('Parent',figHandler,'Style','pushbutton','String','<<Restart',...
+                'Position',[10,480,50,20],'Units','normalized','Visible','on',...
+                'CallBack',@(ButtonH,event)buttonIndietro(app,figHandler));
+            app.ButtonHelp=uicontrol('Parent',figHandler,'Style','pushbutton','String','Help',...
+                'Position',[60,480,50,20],'Units','normalized','Visible','on',...
+                'CallBack',@(ButtonH,event)openHelp('helpSwing.txt'));
+        end
+        
+        function buttonIndietro(app,figHandler)
+            close(figHandler)
+            PlotSkew(app.path,app.fileName,app.correctionFactor,app.fs,app.interval);
+        end
+               
   end
     
     

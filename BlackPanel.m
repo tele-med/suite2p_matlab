@@ -108,7 +108,7 @@ classdef BlackPanel <handle
             
             else if t=='l'
                 app.level=app.levelField.Value;
-                end
+            end
                 
           end
   
@@ -119,9 +119,6 @@ classdef BlackPanel <handle
            
            %menu ROI Manager
            app.menuROI = uimenu(app.MainFrame.Figure,'Text','ROIManager','Visible','off');
-           
-           mitemChoose=uimenu(app.menuROI,'Text','Choose tif');
-           mitemChoose.MenuSelectedFcn = @(src,event)chooseSomeImages(app,'f');
            
            mitemAnalyze=uimenu(app.menuROI,'Text','Analyze');
            mitemAnalyze.Accelerator = 'A';
@@ -167,6 +164,7 @@ classdef BlackPanel <handle
         
         
         function roiAnalyzer(app) %INTERFACCIA PER L'ROI TOOLBOX
+           chooseSomeImages(app,'f') %scelgo i 3 frame
            app.count=0;
            app.FrameROI=uifigure('Name','ROI Analizer','Color','#FFFFFF','Position',[1049,337,250,400]);
            gROI=uigridlayout(app.FrameROI,[5 2]);

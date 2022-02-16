@@ -28,6 +28,8 @@ classdef DrugClass <handle
         
         correctionFactor
         alphaField
+        deltaFoF
+        t
 
         order
         filterField
@@ -36,6 +38,9 @@ classdef DrugClass <handle
         cutField
         
         runButton
+        
+        photob
+        YPhotoBleach
         
         saveButton
         dfUp
@@ -128,11 +133,11 @@ classdef DrugClass <handle
            app.cut=0.5;
            app.cutField.Value = 0.5;
            
-           app.saveButton=uibutton(grid2,'Text','Save data');  
-           app.saveButton.Layout.Row=7;
-           app.saveButton.Layout.Column=[1,2];
-           app.saveButton.ButtonPushedFcn = @(src,event)saveFiles(app);
-          
+           
+           app.photob=uibutton(grid2,'Text','Correct Photobleaching');
+           app.photob.ButtonPushedFcn = @(src,event)Photobleaching(app);
+           app.photob.Layout.Row=7;
+           app.photob.Layout.Column=[1,2];
            
            % RUN
            app.runButton=uibutton(grid2,'Text','RUN/RESTART');
@@ -140,9 +145,15 @@ classdef DrugClass <handle
            app.runButton.Layout.Column=[1,2];
            app.runButton.ButtonPushedFcn=@(btn,event)PostSuite2pStim(app,app.fs,app.correctionFactor,app.order,app.cut,app.ax,app.ax2);
            
+           %SAVE
+           app.saveButton=uibutton(grid2,'Text','Save data');  
+           app.saveButton.ButtonPushedFcn = @(src,event)saveFiles(app);
+           
+           %HELP BUTTON
            app.help=uibutton(grid2,'Text','Help');
            app.help.ButtonPushedFcn = @(src,event)openHelp('helpDrug.txt');
            
+           %TEXT AREA
            app.txaB=uitextarea(grid2,'Editable','off');
            app.txaB.Layout.Row=9;
            app.txaB.Layout.Column=[1,2];
@@ -152,6 +163,7 @@ classdef DrugClass <handle
         end
         
         function allPanelConfig(app,gB)
+            
             p2=uipanel(gB);
             p2.Layout.Column=3;
             app.ax2 = axes(p2);
@@ -191,6 +203,12 @@ classdef DrugClass <handle
      
     
         function saveFiles(app)
+            
+            if ~exist('MatlabResults', 'dir')
+                mkdir('MatlabResults')
+                sprintf('MatlabResults folder created')
+            end
+            
             %salvataggio
             %prompt per scegliere directory di destinazione e poi salvare in
             %quel path
@@ -202,20 +220,18 @@ classdef DrugClass <handle
             Fig2=figure();
             set(Fig2, 'Visible', 'off');
             copyobj(app.ax,Fig2);
-            print(Fig2,'Groups.png','-dpng','-r300')
+            print(Fig2,'MatlabResults/Groups.png','-dpng','-r300')
             
             m=[app.dfUp;app.dfMiddle;app.dfDown;app.time;app.interval]';
             
             iscell=app.in.iscell;
             save('Fall.mat','iscell','-append');
-            writematrix(app.deleted,'deletedCells.txt');
-            writematrix(m,'Up-Middle-Down-time-intervals.txt')
+            writematrix(app.deleted,'MatlabResults/deletedCells.txt');
+            writematrix(m,'MatlabResults/Up-Middle-Down-time-intervals.txt')
             
             set(app.saveButton,'backg',col);
         end
-        
-        
-        
+  
 end
     
 end
