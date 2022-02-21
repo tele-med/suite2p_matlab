@@ -84,17 +84,7 @@ classdef PlotSkew <handle
             app.iscell=app.in.iscell;
             app.interval=interval;
             
-            if strcmp(app.interval,'all')==0
-                interval=split(app.interval,',');
-                init=str2double(interval(1));
-                fin=str2double(interval(2));
-                if isnan(fin)==1
-                    fin=length(app.in.F);
-                end
-                app.in.F=app.in.F(:,init:fin);
-                app.in.Fneu=app.in.Fneu(:,init:fin);
-                app.in.spks=app.in.spks(:,init:fin);
-            end
+            intervals(app,app.interval);
 
             app.deltaFoF=deltaFoverF(app.iscell,app.in.F,app.in.Fneu,correctionFactor);
             %normalization of dFoF in between -1 1

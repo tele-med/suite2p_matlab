@@ -16,6 +16,8 @@ classdef DrugClass <handle
         path
         tF
         tL
+        start
+        stop
         in
         idx_cell
         IDX
@@ -29,6 +31,7 @@ classdef DrugClass <handle
         correctionFactor
         alphaField
         deltaFoF
+        deltaFoFCut
         t
 
         order

@@ -40,7 +40,5 @@ F0=mean(Fcorrected_filt(:,1:tStim-1)')';    %vettore delle medie per ogni ROI (1
 deltaFoF=(Fcorrected_filt-F0);            %prova fatta col loop
 deltaFoF=deltaFoF./F0;
 
-
-
 end
 

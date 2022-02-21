@@ -7,13 +7,14 @@ function PostSuite2pStim(app,fs,correctionFactor,order,cut,ax,ax2)
 %indice suite2p da visualizzare 
 %possibile bottone per usare un cut factor ottenuto dal segnale medio di glut
 
-
-tF=app.tF;
-tL=app.tL;
-dFoverF=deltaFoverF(app.in.iscell,app.in.F,app.in.Fneu,correctionFactor,order,tF);
-time=0:1/fs:size(dFoverF,2)/fs;
-time(end)=[];
-time=time/60;
+start=app.start;
+stop=app.stop;
+tF=app.tF-start+1;
+tL=app.tL-start+1;
+dFoverF=deltaFoverF(app.in.iscell,app.in.F,app.in.Fneu,app.correctionFactor);
+dFoverF=dFoverF(:,start:stop);
+app.deltaFoF=dFoverF;
+time=app.t;
 interval=zeros(size(time));
 interval(1,tF:tL)=1;
 
@@ -73,8 +74,8 @@ interval(1,tF:tL)=1;
         hold (ax,'on')
     end
 
-    tF=tF/fs/60;
-    tL=tL/fs/60;
+    tF=app.tF/fs/60;
+    tL=app.tL/fs/60;
     xline(tF,'-.',{'Drug appl',round(tF,2)},'Parent',ax);
     xline(tL,'-.',{'Wash out',round(tL,2)},'Parent',ax);
     xlabel('Time [min]','Parent',ax)
