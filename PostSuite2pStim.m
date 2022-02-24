@@ -11,9 +11,9 @@ start=app.start;
 stop=app.stop;
 tF=app.tF-start+1;
 tL=app.tL-start+1;
-dFoverF=deltaFoverF(app.in.iscell,app.in.F,app.in.Fneu,app.correctionFactor);
+dFoverF=deltaFoverF(app.in.iscell,app.in.F,app.in.Fneu,app.correctionFactor,5,tF);
 dFoverF=dFoverF(:,start:stop);
-app.deltaFoF=dFoverF;
+%app.deltaFoF=dFoverF;
 time=app.t;
 interval=zeros(size(time));
 interval(1,tF:tL)=1;
@@ -24,13 +24,16 @@ interval(1,tF:tL)=1;
     cla(ax) %clear axes
     cla(ax2)
     
+    MAX=max(max(dFoverF))
+    cut=cut*MAX/100
+    
     %prendo solo i frame relativi a un minuto precedente il lavaggio (tL)
     %perché così lavoro su un momento in cui il comportamento della cellula
     %si è assestato, dato che ho somministrato il farmaco molto prima e c'è
     %stato il tempo di raggiungere una risposta "definitiva"
     m=mean(dFoverF(:,tL-fs*60:tL)')';  
     
-    idxU=m>cut;   %up se hanno un dFoverF>cut %indici MATLAB
+    idxU=m>=cut;   %up se hanno un dFoverF>cut %indici MATLAB
     dfUp=zeros(1,size(dFoverF,2));
     len=mat2str(sum(idxU));
     if sum(idxU)>1
@@ -44,7 +47,7 @@ interval(1,tF:tL)=1;
         hold (ax,'on')
     end
  
-    idxD=m<-cut;  %down se hanno un dFoverF<-0.1
+    idxD=m<=-cut;  %down se hanno un dFoverF<-0.1
     dfDown=zeros(1,size(dFoverF,2));
     len=mat2str(sum(idxD));
     if sum(idxD)>1
@@ -60,11 +63,11 @@ interval(1,tF:tL)=1;
         
     end
 
-    idx=m>=-cut & m<=cut; %middle
+    idxM=(m>-cut & m<cut); %middle
     dfMiddle=zeros(1,size(dFoverF,2));
-    len=mat2str(sum(idx));
-    if sum(idx)>1
-        dfMiddle=dFoverF(idx,:);
+    len=mat2str(sum(idxM));
+    if sum(idxM)>1
+        dfMiddle=dFoverF(idxM,:);
         dfMiddle=mean(dfMiddle);
         plot(time,dfMiddle,'b','Parent',ax)
         str3=append('NO RESP ',len);
@@ -84,21 +87,17 @@ interval(1,tF:tL)=1;
    
     %ALL CELLS
     LineList = plot(time,dFoverF,'Parent',ax2);
+    
     set(LineList, 'ButtonDownFcn', {@myLineCallback, LineList,app});
-
+    
     xlabel('Time [min]','Parent',ax2)
     ylabel('dF/F','Parent',ax2)
     title('All cells dF/F traces','Parent',ax2)
-
-
 
     app.dfUp=dfUp;
     app.dfDown=dfDown;
     app.dfMiddle=dfMiddle;
     app.time=time;
-    
     app.interval=interval;
-
-
-
+    
 end

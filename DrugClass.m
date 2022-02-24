@@ -41,6 +41,7 @@ classdef DrugClass <handle
         cutField
         
         runButton
+        restartButton
         
         photob
         YPhotoBleach
@@ -86,13 +87,14 @@ classdef DrugClass <handle
            app.PanelConfig.Layout.Column=1;
            
            % Grid in the panel
-           grid2 = uigridlayout(app.PanelConfig,[8 2]);
-           grid2.RowHeight = {22,22,22,22,22,22,22,22,'1x'};
+           grid2 = uigridlayout(app.PanelConfig,[10 2]);
+           grid2.RowHeight = {22,22,22,22,22,22,22,22,22,'1x'};
            grid2.ColumnWidth = {140,'1x'};
 
            %Buttons for file and directory selection
            buttonf = uibutton(grid2,'Text','Import .mat file');
            buttonf.ButtonPushedFcn = @(src,event)MenuSelection(app,app.type,buttonf);
+           buttonf.Layout.Row=1;
            buttonf.Layout.Column=[1,2];
            
            % frequency Label
@@ -127,26 +129,34 @@ classdef DrugClass <handle
            app.filterField.Value = 5; 
            
            % cutLabel
-           cutLabel=uilabel(grid2,'HorizontalAlignment','right','Text','cut treshold');
+           cutLabel=uilabel(grid2,'HorizontalAlignment','right','Text','cut treshold in %');
            cutLabel.Layout.Row=5;
            cutLabel.Layout.Column=1;
            
-           % cut edit field
+           % cut editField
            app.cutField=uieditfield(grid2,'numeric','ValueChangedFcn',@(src,event)takeValue(app,'c'));
-           app.cut=0.5;
-           app.cutField.Value = 0.5;
-           
-           
-           app.photob=uibutton(grid2,'Text','Correct Photobleaching');
-           app.photob.ButtonPushedFcn = @(src,event)Photobleaching(app);
-           app.photob.Layout.Row=7;
-           app.photob.Layout.Column=[1,2];
+           app.cutField.Layout.Row=5;
+           app.cutField.Layout.Column=2;
+           app.cut=20;
+           app.cutField.Value = 20;
            
            % RUN
-           app.runButton=uibutton(grid2,'Text','RUN/RESTART');
+           app.runButton=uibutton(grid2,'Text','RUN');
            app.runButton.Layout.Row=6;
            app.runButton.Layout.Column=[1,2];
-           app.runButton.ButtonPushedFcn=@(btn,event)PostSuite2pStim(app,app.fs,app.correctionFactor,app.order,app.cut,app.ax,app.ax2);
+           app.runButton.ButtonPushedFcn=@(btn,event)RunFunction(app);
+           
+           %RESTART
+           app.restartButton=uibutton(grid2,'Text','RESTART');
+           app.restartButton.Layout.Row=7;
+           app.restartButton.Layout.Column=[1,2];
+           app.restartButton.ButtonPushedFcn=@(btn,event)PostSuite2pStim(app,app.fs,app.correctionFactor,app.order,app.cut,app.ax,app.ax2);
+           
+           %PHOTOBLEACHING Button
+           app.photob=uibutton(grid2,'Text','Correct Photobleaching');
+           app.photob.ButtonPushedFcn = @(src,event)Photobleaching(app);
+           app.photob.Layout.Row=8;
+           app.photob.Layout.Column=[1,2];
            
            %SAVE
            app.saveButton=uibutton(grid2,'Text','Save data');  
@@ -158,7 +168,7 @@ classdef DrugClass <handle
            
            %TEXT AREA
            app.txaB=uitextarea(grid2,'Editable','off');
-           app.txaB.Layout.Row=9;
+           app.txaB.Layout.Row=10;
            app.txaB.Layout.Column=[1,2];
            
            
@@ -201,7 +211,8 @@ classdef DrugClass <handle
             
             h=app.saveButton;
             set(h,'backg',[1 .6 .6]);
-           
+            title('All cells dF/F traces','Parent',app.ax2)
+            
         end
      
     
@@ -234,7 +245,12 @@ classdef DrugClass <handle
             
             set(app.saveButton,'backg',col);
         end
-  
+        
+        function RunFunction(app)
+            
+            TimePointsCustomization(app); %Here app.tF and app.tL are choosen
+            PostSuite2pStim(app,app.fs,app.correctionFactor,app.order,app.cut,app.ax,app.ax2);
+        end
 end
     
 end

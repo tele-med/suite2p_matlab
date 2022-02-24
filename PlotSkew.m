@@ -508,7 +508,7 @@ classdef PlotSkew <handle
             if type==0
                 app.TextC.String=str;
             else
-                filename=append('MatlabResults/',extractBefore(app.fileName,'Fall.mat'),'IntrestingIndexes',app.interval,'.txt');
+                filename=append('MatlabResults/',extractBefore(app.fileName,'Fall.mat'),date,'IntrestingIndexes-',app.interval,'.txt');
                 fid = fopen(filename,'wt');
                 fprintf(fid, str);
                 fclose(fid);
@@ -527,6 +527,8 @@ classdef PlotSkew <handle
         end
         
         function peakTool(app)
+            app.indexesOrig={};
+            app.peaksOrig={};
             app.TextC.String='#cell separated by commas';
             app.M=app.deltaFoFskew';
             numberOfCell=size(app.M,2);
@@ -548,9 +550,9 @@ classdef PlotSkew <handle
             smooth = sgolayfilt(double(diff),7,21);
 
             for i=1:size(smooth,2)
-                [index,peak]=PeaksDetector(smooth(:,i),Fcut(i));
+                trace=smooth(:,i);
+                [index,peak]=PeaksDetector(trace,Fcut(i));
                 app.indexesOrig{i}=index/(app.fs*60);
-                app.peaksOrig{i}=peak;
                 app.freq(i)=length(index)/app.t(end);   
             end
             
@@ -561,21 +563,21 @@ classdef PlotSkew <handle
             %plot part, the j index controls the number of figures, in
             %which we have 4 subplot boxes regulated by k.
             %the i index controls the dFoFskew trace we are working on 
+            plotPeaks(app,smooth)
+        end
+        
+        function plotPeaks(app,smooth)
             i=1;
             for j=1:round(size(smooth,2)/4)
-
-%                if i>size(smooth,2)
-%                    break
-%                end
 
                figPeak=figure;
 
                for k=1:4
                     ax(k) = subplot(2,2,k);
-
-                    h1=plot(app.t,smooth(:,i));
+                    trace=smooth(:,i);
+                    h1=plot(app.t,trace);
                     hold on
-                   
+                    app.peaksOrig{i}=trace(round(app.indexesOrig{i}*app.fs*60));
                     for id=1:length(app.indexesOrig{i})
                         PeaksList = plot(app.indexesOrig{i}(id),app.peaksOrig{i}(id),'*r');
                         set(PeaksList, 'ButtonDownFcn', {@deleteExistingPeak,i,PeaksList,app}); %delete an existing peak
@@ -595,22 +597,21 @@ classdef PlotSkew <handle
                          'CallBack',@(src,event)savePeaks(app)); %CALLBACK FOR SAVING
             end
         end
-        
         function savePeaks(app)
             %SUBSTITUTE THE ORIGINAL WITH THE NEW ONE ON WHICH THE
             %MODIFICATIONS HAD BEEN APPLIED
-            
+            app.peaksOrig=[];
             app.peaksOrig=app.peaksNew;
             app.indexesOrig=[];
             app.indexesOrig=app.indexesNew;
             saveStruct(app);
         end
-        
         function saveStruct(app)
             %%SAVE PEAKS
             clear peak;
             peak.originalTraces=app.M;
             peak.indexes=app.indexesOrig;
+            %peak.peaks=app.peaksOrig;
             
             save(app.fileName,'peak','-append');
             fprintf('peak saved')
@@ -619,28 +620,33 @@ classdef PlotSkew <handle
         function loadPeaks(app)
             try
                 load(app.fileName,'peak')
-                i=1;
-                for j=1:round(size(app.in.peak.originalTraces,2)/4)
-                    figure
-
-                    for k=1:4
-                        trace=round(peak.originalTraces(:,i),2);
-                        index=peak.indexes{i};
-
-                        subplot(2,2,k);
-
-                        plot(app.t,trace);
-                        hold on
-                        id=round(index*app.fs*60);
-                        plot(index,trace(id),'*r');
-                        xlabel('time') 
-                        ylabel('dF/F with peaks') 
-                        i=i+1;
-                        if i>size(app.in.peak.originalTraces,2)
-                            break
-                        end
-                    end
-                end
+                app.indexesOrig=peak.indexes;
+                app.indexesNew=app.indexesOrig;
+                app.peaksNew=app.peaksOrig;
+                %app.peaksOrig=peak.peaks;
+%                 i=1;
+%                 for j=1:round(size(app.in.peak.originalTraces,2)/4)
+%                     figure
+% 
+%                     for k=1:4
+%                         trace=round(peak.originalTraces(:,i),2);
+%                         index=peak.indexes{i};
+% 
+%                         subplot(2,2,k);
+% 
+%                         plot(app.t,trace);
+%                         hold on
+%                         id=round(index*app.fs*60);
+%                         plot(index,trace(id),'*r');
+%                         xlabel('time') 
+%                         ylabel('dF/F with peaks') 
+%                         i=i+1;
+%                         if i>size(app.in.peak.originalTraces,2)
+%                             break
+%                         end
+%                     end
+%               end
+            plotPeaks(app,peak.originalTraces)
             catch e %e is an MException struct
                 fprintf(1,'The identifier was:\n%s',e.identifier);
                 fprintf(1,'There was an error! The message was:\n%s',e.message);
