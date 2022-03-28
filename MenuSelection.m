@@ -36,7 +36,11 @@ function file=MenuSelection(varargin) %PER IL MENU IMPORT
                     app.path=append(app.path,'\',app.file);
                     app.in=load(app.path);
                     app.idx_cell=find(app.in.iscell==1);
-                    
+%                     app.start=1;
+%                     app.stop=size(app.in.F,2);
+%                     app.t=app.start/app.fs:1/app.fs:app.stop/app.fs;
+%                     app.t=app.t/60;
+                    initValues(app);
                 catch
                     app.txaB.Value='NO FILE SELECTED';
                 end

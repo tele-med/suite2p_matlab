@@ -24,6 +24,12 @@ end
 
 eliminated(eliminated==0)=[];
 
+try isempty(totalImage)
+catch
+    msg='Lower the Gray level for black value';
+    error(msg);
+end
+
 if ~isempty(eliminated)
     if length(eliminated)==1
         eliminated(2)=numframe-1;
@@ -35,6 +41,9 @@ if ~isempty(eliminated)
     for i = 2:size(totalImage, 3) %append the rest of the slices
     imwrite(totalImage(:, :, i),newName, 'WriteMode', 'append');
     end
+else
+    msg='Lower the Gray level for black value';
+    error(msg);
 end
 
 

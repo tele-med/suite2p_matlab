@@ -84,15 +84,16 @@ classdef PlotSkew <handle
             app.iscell=app.in.iscell;
             app.interval=interval;
             
+            
             intervals(app,app.interval);
 
-            app.deltaFoF=deltaFoverF(app.iscell,app.in.F,app.in.Fneu,correctionFactor);
+            app.deltaFoF=deltaFoverF(app.iscell,app.in.F,app.in.Fneu,correctionFactor,5);
             %normalization of dFoF in between -1 1
-            M=max(max(app.deltaFoF));
-            m=min(min(app.deltaFoF));
-            range = M - m;
-            m01 = (app.deltaFoF - m) / range;
-            app.deltaFoF=2 * m01 - 1;
+%             M=max(max(app.deltaFoF));
+%             m=min(min(app.deltaFoF));
+%             range = M - m;
+%             m01 = (app.deltaFoF - m) / range;
+%             app.deltaFoF=2 * m01 - 1;
            
             %inizializzazione deltaFoverFskew con il deltaFoF totale
             app.deltaFoFskew=app.deltaFoF;
@@ -136,11 +137,13 @@ classdef PlotSkew <handle
         
         function showImage(app,image)
             % %PLOTTING THE MASKS IN RANDOM COLORS
+            
             f=figure;
             f.Position=[488,253,700,700];
             indietro(app,f);
             mymap=[[1,1,1];hsv];
             imshow(rescale(image),'Colormap',mymap)
+            
         end
 
         function skewnessHandling(app)
@@ -225,6 +228,14 @@ classdef PlotSkew <handle
             
             app.ButtonExistingPeak=uicontrol('Parent',app.hFig,'Style','pushbutton','String','LoadPeaks','Position',[520,1,100,20],'Units','normalized','Visible','on',...
                 'CallBack',@(src,event)loadPeaks(app));
+            
+            
+            n=app.iscell(:,1);
+            n(n==0)=[];
+            n=string(length(n));
+            n=append("Total number of cells: ",n);
+            lbl = uicontrol(app.hFig,'Style','text','String',n,'Position',[10,200,100,30]);
+            
         end
         
         function skewnessLevelChanged(app)
@@ -438,9 +449,9 @@ classdef PlotSkew <handle
                 
                 for i=begindex:endindex
                     trace=traces(i,:);
-                    plot(app.t,trace+i)
+                    plot(app.t,trace+i-1)
                     hold on
-                    text(app.t(ceil(length(app.t)/2)),i-0.5,coords{i,3},'Color','m','FontSize',8);    
+                    text(app.t(ceil(length(app.t)/2)),i-1-0.5,coords{i,3},'Color','m','FontSize',8);    
                 end
                 begindex=endindex+1;
                 xlabel('time[min]')

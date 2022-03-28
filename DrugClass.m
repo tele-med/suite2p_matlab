@@ -4,6 +4,7 @@ classdef DrugClass <handle
         
         Figure
         PanelConfig
+        PanelDelta
         
         ax
         ax2
@@ -38,7 +39,13 @@ classdef DrugClass <handle
         filterField
         
         cut
+        cutL
+        cutH
         cutField
+        
+        calibrationValueL
+        calibrationValueH
+        calibrationField
         
         runButton
         restartButton
@@ -64,36 +71,45 @@ classdef DrugClass <handle
             %costruttore
             app.type='m';
             app.Figure=uifigure('Name','Drug Application Experiment');
-            app.Figure.Position=[115   221   1200   470];
-            gB=uigridlayout(app.Figure,[1 3]);
+            app.Figure.Position=[115   221   1300   530];
+            gB=uigridlayout(app.Figure,[2 3]);
             gB.ColumnWidth={210,'1x','1x'};
+            gB.RowHeight={60,'1x'};
             
             configPanel(app,gB)
             
-            p=uipanel(gB);
-            p.Layout.Column=2;
-            app.ax = axes(p);
+            deltaPanel(app,gB)
             
             allPanelConfig(app,gB)
 
 
         end
     
-        
+        function deltaPanel(app,gB) %pannello deltaFoF
+            app.PanelDelta=uipanel(gB,'Title','Global deltaFoF');
+            app.PanelDelta.Layout.Column=1;
+            app.PanelDelta.Layout.Row=1;
+            grid2 = uigridlayout(app.PanelDelta,[1 1]);
+            buttont=uibutton(grid2,'Text','Import tif file');
+            buttont.ButtonPushedFcn=@(src,event)globalDelta(app); %tif selection for global dfoverf 
+            
+        end
+            
         
         function configPanel(app,gB) %Pannello Config
            
            app.PanelConfig = uipanel(gB,'Title','Configuration');
            app.PanelConfig.Layout.Column=1;
+           app.PanelConfig.Layout.Row=2;
            
            % Grid in the panel
-           grid2 = uigridlayout(app.PanelConfig,[10 2]);
-           grid2.RowHeight = {22,22,22,22,22,22,22,22,22,'1x'};
+           grid2 = uigridlayout(app.PanelConfig,[11 2]);
+           grid2.RowHeight = {22,22,22,22,22,22,22,22,22,22,'1x'};
            grid2.ColumnWidth = {140,'1x'};
 
            %Buttons for file and directory selection
            buttonf = uibutton(grid2,'Text','Import .mat file');
-           buttonf.ButtonPushedFcn = @(src,event)MenuSelection(app,app.type,buttonf);
+           buttonf.ButtonPushedFcn = @(src,event)MenuSelection(app,'m',buttonf);
            buttonf.Layout.Row=1;
            buttonf.Layout.Column=[1,2];
            
@@ -114,8 +130,8 @@ classdef DrugClass <handle
            
            % alpha edit field
            app.alphaField=uieditfield(grid2,'numeric','ValueChangedFcn',@(src,event)takeValue(app,'a'));
-           app.correctionFactor=0.9;
-           app.alphaField.Value = 0.9;
+           app.correctionFactor=0.7;
+           app.alphaField.Value = 0.7;
           
            %LP Label
            LPLabel=uilabel(grid2,'HorizontalAlignment','right','Text','LP filter order');
@@ -129,33 +145,47 @@ classdef DrugClass <handle
            app.filterField.Value = 5; 
            
            % cutLabel
-           cutLabel=uilabel(grid2,'HorizontalAlignment','right','Text','cut treshold in %');
+           cutLabel=uilabel(grid2,'HorizontalAlignment','right','Text','cut treshold [delta]');
            cutLabel.Layout.Row=5;
            cutLabel.Layout.Column=1;
-           
            % cut editField
-           app.cutField=uieditfield(grid2,'numeric','ValueChangedFcn',@(src,event)takeValue(app,'c'));
+           app.cutField=uieditfield(grid2,'ValueChangedFcn',@(src,event)takeValue(app,'c'));
            app.cutField.Layout.Row=5;
            app.cutField.Layout.Column=2;
-           app.cut=20;
-           app.cutField.Value = 20;
+           app.cutL=-2;
+           app.cutH=5;
+           app.cutField.Value = '-2,5';
+           
+           % calibrationLabel
+           calibrationLabel=uilabel(grid2,'HorizontalAlignment','right','Text','calibration value');
+           calibrationLabel.Layout.Row=6;
+           calibrationLabel.Layout.Column=1;
+           % calibration editField
+           app.calibrationField=uieditfield(grid2,'ValueChangedFcn',@(src,event)takeValue(app,'calib'));
+           app.calibrationField.Layout.Row=6;
+           app.calibrationField.Layout.Column=2;
+           app.calibrationValueH=8;
+           app.calibrationValueL=-3;
+           app.calibrationField.Value = '-3,8';
+           
+           
            
            % RUN
            app.runButton=uibutton(grid2,'Text','RUN');
-           app.runButton.Layout.Row=6;
+           app.runButton.Layout.Row=8;
            app.runButton.Layout.Column=[1,2];
            app.runButton.ButtonPushedFcn=@(btn,event)RunFunction(app);
            
            %RESTART
            app.restartButton=uibutton(grid2,'Text','RESTART');
-           app.restartButton.Layout.Row=7;
+           app.restartButton.Layout.Row=9;
            app.restartButton.Layout.Column=[1,2];
-           app.restartButton.ButtonPushedFcn=@(btn,event)PostSuite2pStim(app,app.fs,app.correctionFactor,app.order,app.cut,app.ax,app.ax2);
+           app.restartButton.ButtonPushedFcn=@(btn,event)RestartFunction(app);
            
            %PHOTOBLEACHING Button
            app.photob=uibutton(grid2,'Text','Correct Photobleaching');
            app.photob.ButtonPushedFcn = @(src,event)Photobleaching(app);
-           app.photob.Layout.Row=8;
+           app.photob.Layout.Row=7;
            app.photob.Layout.Column=[1,2];
            
            %SAVE
@@ -168,7 +198,7 @@ classdef DrugClass <handle
            
            %TEXT AREA
            app.txaB=uitextarea(grid2,'Editable','off');
-           app.txaB.Layout.Row=10;
+           app.txaB.Layout.Row=11;
            app.txaB.Layout.Column=[1,2];
            
            
@@ -177,8 +207,14 @@ classdef DrugClass <handle
         
         function allPanelConfig(app,gB)
             
+            p=uipanel(gB);
+            p.Layout.Column=2;
+            p.Layout.Row=[1,2];
+            app.ax = axes(p);
+            
             p2=uipanel(gB);
             p2.Layout.Column=3;
+            p2.Layout.Row=[1,2];
             app.ax2 = axes(p2);
             
             app.buttonDelete=uibutton(p2,'Text','Delete Trace','Position',[2,2,200,20]);
@@ -195,7 +231,13 @@ classdef DrugClass <handle
                 case 'o'
                     app.order=app.filterField.Value;
                 case 'c'
-                    app.cut=app.cutField.Value;
+                    v=split(app.cutField.Value,',');
+                    app.cutL=str2double(v{1});
+                    app.cutH=str2double(v{2});
+                case 'calib'
+                    v=split(app.calibrationField.Value,',');
+                    app.calibrationValueL=str2double(v{1});
+                    app.calibrationValueH=str2double(v{2});
             end
          
         end
@@ -207,7 +249,7 @@ classdef DrugClass <handle
             app.deleted=[app.deleted,s2pidx];
             app.in.iscell(Midx,1)=0; %cancello la cellula 
             app.idx_cell(app.IDX)=[]; 
-            PostSuite2pStim(app,app.fs,app.correctionFactor,app.order,app.cut,app.ax,app.ax2);
+            PostSuite2pStim(app,app.fs,app.correctionFactor,app.order,app.ax,app.ax2);
             
             h=app.saveButton;
             set(h,'backg',[1 .6 .6]);
@@ -249,8 +291,19 @@ classdef DrugClass <handle
         function RunFunction(app)
             
             TimePointsCustomization(app); %Here app.tF and app.tL are choosen
-            PostSuite2pStim(app,app.fs,app.correctionFactor,app.order,app.cut,app.ax,app.ax2);
+            PostSuite2pStim(app,app.fs,app.correctionFactor,app.order,app.ax,app.ax2);
+            istogramma(app)
         end
-end
+        
+        function RestartFunction(app)
+            PostSuite2pStim(app,app.fs,app.correctionFactor,app.order,app.ax,app.ax2);
+            istogramma(app)
+        end
+        
+        function globalDelta(app)
+            MenuSelection(app,'f');
+            globalDeltaFromTiff(app.file);
+        end
     
+    end
 end

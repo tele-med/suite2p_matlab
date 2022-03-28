@@ -1,26 +1,42 @@
 function TimePointsCustomization(app)
-list={};
-path=app.path;
-newStr = extractBetween(path,'[',']');
-splitted=split(newStr,'-');
-str=str2double(splitted);
-if isempty(str)
-    error('Wrong type of folder, cant find the deleted black frames written inside []')
-end
-%finding all the intervals 
-idx=1;
-i=1;
-while length(idx)>=1
-    t(i)=str(idx);
-    sub=str-t(i);
-    idx=find(sub>20,1,'first');
-    i=i+1;  
-end
+
+% path=app.path;
+% newStr = extractBetween(path,'[',']');
+% splitted=split(newStr,'-');
+% str=str2double(splitted);
+% 
 
 figure('Name','Time points and interval definition')
 mediaF=mean(app.in.F);
 plot(mediaF)
 hold on
+
+% try
+%     %finding all the intervals
+%     idx=1;
+%     i=1;
+%     while length(idx)>=1
+%         t(i)=str(idx);
+%         sub=str-t(i);
+%         idx=find(sub>20,1,'first');
+%         i=i+1;  
+%     end
+% catch
+%     display('Wrong type of folder, cant find the deleted black frames written inside []')
+%     customization(app);
+%     app.start=1; %the start is 1 as default (start of the signal)
+%     app.stop=size(app.in.F,2); 
+%     app.deltaFoF=deltaFoverF(app.in.iscell,app.in.F,app.in.Fneu,app.correctionFactor,app.order,app.tF);
+%     app.deltaFoFCut=app.deltaFoF(:,app.start:app.stop);
+%     app.t=app.start/app.fs:1/app.fs:app.stop/app.fs;%size(app.deltaFoF,2)/app.fs;
+%     %app.t(end)=[];
+%     app.t=app.t/60;
+% 
+%     return
+% end
+
+t=[app.tF,app.tL];
+
 for i=1:length(t)
     xline(t(i),'--k')
     hold on
@@ -48,6 +64,7 @@ if strcmp(answer{1},'all')==0
     end
 end
 
+%if I wanto to define intervals
 if strcmp(answer{1},defaultanswer{1})==0
     
     hold on
@@ -105,6 +122,8 @@ app.t=app.t/60;
         app.start=str2double(answ{1});
         app.tF=str2double(answ{2});
         app.tL=str2double(answ{3});
+        t(1)=app.tF;
+        t(2)=app.tL;
     end
         
 end

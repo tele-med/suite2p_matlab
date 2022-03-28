@@ -45,11 +45,11 @@ shifts=triu(reshape(shifts,dim,dim));
 
 mmax(1:(dim+1):end) = 0; %diag=-2 instead of 1 (max correlation)
 
-% level=0.6;
-% idx=find(mmax>level);
-% lag=shifts(idx);
-% [row,col]=ind2sub(size(mmax),idx);
-% 
+level=0.6;
+idx=find(mmax>level);
+lag=shifts(idx);
+[row,col]=ind2sub(size(mmax),idx);
+
 % traces=[row;col];
 % 
 % correlatedrow=deltaFoF(row,:);
