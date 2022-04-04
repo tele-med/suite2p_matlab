@@ -3,13 +3,13 @@
     <param.appname>CalciumApp</param.appname>
     <param.icon />
     <param.icons />
-    <param.version>1.2</param.version>
+    <param.version>1.0</param.version>
     <param.authnamewatermark />
     <param.email />
     <param.company />
-    <param.summary />
+    <param.summary>Calcium Imaging Analysis Application</param.summary>
     <param.description />
-    <param.screenshot>C:\Users\Sasha\Desktop\Magistrale\tesi\screen\S0008-6.PNG</param.screenshot>
+    <param.screenshot />
     <param.guid />
     <param.installpath.string>\CalciumApp\</param.installpath.string>
     <param.installpath.combo>option.installpath.programfiles</param.installpath.combo>
@@ -45,11 +45,12 @@
     <unset>
       <param.icon />
       <param.icons />
+      <param.version />
       <param.authnamewatermark />
       <param.email />
       <param.company />
-      <param.summary />
       <param.description />
+      <param.screenshot />
       <param.guid />
       <param.installpath.string />
       <param.installpath.combo />
@@ -81,34 +82,40 @@
       <file>${PROJECT_ROOT}\CalciumApp.m</file>
     </fileset.main>
     <fileset.resources />
-    <fileset.package>
-      <file>${PROJECT_ROOT}\help.txt</file>
-      <file>${PROJECT_ROOT}\helpDrug.txt</file>
-      <file>${PROJECT_ROOT}\helpSwing.txt</file>
-    </fileset.package>
+    <fileset.package />
     <fileset.depfun>
       <file>${PROJECT_ROOT}\blackElim.m</file>
       <file>${PROJECT_ROOT}\blackOneTif.m</file>
       <file>${PROJECT_ROOT}\BlackPanel.m</file>
       <file>${PROJECT_ROOT}\buttonPressed.m</file>
+      <file>${PROJECT_ROOT}\Calibration.m</file>
+      <file>${PROJECT_ROOT}\clickHistFcn.m</file>
       <file>${PROJECT_ROOT}\createImage.m</file>
       <file>${PROJECT_ROOT}\createRASTER.m</file>
       <file>${PROJECT_ROOT}\cropArea.m</file>
       <file>${PROJECT_ROOT}\deleteExistingPeak.m</file>
       <file>${PROJECT_ROOT}\deltaFoverF.m</file>
       <file>${PROJECT_ROOT}\DrugClass.m</file>
+      <file>${PROJECT_ROOT}\expsmooth.m</file>
       <file>${PROJECT_ROOT}\FindAssembliesModified.m</file>
+      <file>${PROJECT_ROOT}\globalDeltaFromTiff.m</file>
+      <file>${PROJECT_ROOT}\initValues.m</file>
+      <file>${PROJECT_ROOT}\intervals.m</file>
+      <file>${PROJECT_ROOT}\istogramma.m</file>
       <file>${PROJECT_ROOT}\LoadAndVisualizeTIFSTACK.m</file>
       <file>${PROJECT_ROOT}\MainFrame.m</file>
       <file>${PROJECT_ROOT}\MenuSelection.m</file>
       <file>${PROJECT_ROOT}\myLineCallback.m</file>
       <file>${PROJECT_ROOT}\openHelp.m</file>
       <file>${PROJECT_ROOT}\PeaksDetector.m</file>
+      <file>${PROJECT_ROOT}\PeaksFunction.m</file>
+      <file>${PROJECT_ROOT}\Photobleaching.m</file>
       <file>${PROJECT_ROOT}\PlotSkew.m</file>
       <file>${PROJECT_ROOT}\PostSuite2pStim.m</file>
       <file>${PROJECT_ROOT}\princomp.m</file>
       <file>${PROJECT_ROOT}\pValueSynch.m</file>
       <file>${PROJECT_ROOT}\readPoints.m</file>
+      <file>${PROJECT_ROOT}\sceltaSoglie.m</file>
       <file>${PROJECT_ROOT}\showZValueFcn.m</file>
       <file>${PROJECT_ROOT}\TimePointsCustomization.m</file>
     </fileset.depfun>

@@ -31,14 +31,16 @@ end
 order
 idx_cell=find(iscell(:,1)==1);      %trovo indici delle cellule 
 Fcorrected=F(idx_cell,:)-correctionFactor*Fneu(idx_cell,:); %correggo neuropil
-Fcorrected_filt= medfilt1(Fcorrected',order)';
-%Fcorrected_filt=Fcorrected;
+
+Fcorrected_filt=Fcorrected;
 
 %dF/F **per ogni ROI** 
 F0=mean(Fcorrected_filt(:,1:tStim-1)')';    %vettore delle medie per ogni ROI (1 ROI =1 riga)
 
 deltaFoF=(Fcorrected_filt-F0);            %prova fatta col loop
-deltaFoF=deltaFoF./F0;
+deltaFoF=deltaFoF./abs(F0);
+
+deltaFoF= medfilt1(deltaFoF',order)';
 
 end
 

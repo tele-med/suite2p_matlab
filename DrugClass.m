@@ -4,7 +4,8 @@ classdef DrugClass <handle
         
         Figure
         PanelConfig
-        PanelDelta
+        PanelCalibration
+        CalibrationClass
         
         ax
         ax2
@@ -74,27 +75,31 @@ classdef DrugClass <handle
             app.Figure.Position=[115   221   1300   530];
             gB=uigridlayout(app.Figure,[2 3]);
             gB.ColumnWidth={210,'1x','1x'};
-            gB.RowHeight={60,'1x'};
+            gB.RowHeight={90,'1x'};
             
             configPanel(app,gB)
             
-            deltaPanel(app,gB)
+            calibrationPanel(app,gB)
             
             allPanelConfig(app,gB)
 
 
         end
     
-        function deltaPanel(app,gB) %pannello deltaFoF
-            app.PanelDelta=uipanel(gB,'Title','Global deltaFoF');
-            app.PanelDelta.Layout.Column=1;
-            app.PanelDelta.Layout.Row=1;
-            grid2 = uigridlayout(app.PanelDelta,[1 1]);
-            buttont=uibutton(grid2,'Text','Import tif file');
+        function calibrationPanel(app,gB) %pannello deltaFoF
+            app.PanelCalibration=uipanel(gB,'Title','Calibration');
+            app.PanelCalibration.Layout.Column=1;
+            app.PanelCalibration.Layout.Row=1;
+            grid2 = uigridlayout(app.PanelCalibration,[2 1]);
+            buttont=uibutton(grid2,'Text','Global dFoF (tif file)');
             buttont.ButtonPushedFcn=@(src,event)globalDelta(app); %tif selection for global dfoverf 
-            
+            buttonc=uibutton(grid2,'Text','Calibration');
+            buttonc.ButtonPushedFcn=@(src,event)calibrationFunction(app);
         end
             
+        function calibrationFunction(app)
+            app.CalibrationClass=Calibration;
+        end
         
         function configPanel(app,gB) %Pannello Config
            
@@ -103,8 +108,8 @@ classdef DrugClass <handle
            app.PanelConfig.Layout.Row=2;
            
            % Grid in the panel
-           grid2 = uigridlayout(app.PanelConfig,[11 2]);
-           grid2.RowHeight = {22,22,22,22,22,22,22,22,22,22,'1x'};
+           grid2 = uigridlayout(app.PanelConfig,[12 2]);
+           grid2.RowHeight = {20,20,20,20,20,20,20,20,20,20,20,'1x'};
            grid2.ColumnWidth = {140,'1x'};
 
            %Buttons for file and directory selection
@@ -157,9 +162,12 @@ classdef DrugClass <handle
            app.cutField.Value = '-2,5';
            
            % calibrationLabel
-           calibrationLabel=uilabel(grid2,'HorizontalAlignment','right','Text','calibration value');
+           calibrationLabel=uilabel(grid2,'HorizontalAlignment','right','Text','hist extremes');
            calibrationLabel.Layout.Row=6;
            calibrationLabel.Layout.Column=1;
+           
+           
+           
            % calibration editField
            app.calibrationField=uieditfield(grid2,'ValueChangedFcn',@(src,event)takeValue(app,'calib'));
            app.calibrationField.Layout.Row=6;
@@ -168,25 +176,29 @@ classdef DrugClass <handle
            app.calibrationValueL=-3;
            app.calibrationField.Value = '-3,8';
            
-           
+           %histogram
+           histButton=uibutton(grid2,'Text','histogram','ButtonPushedFcn',@(src,event)istogramma(app));
+           histButton.Layout.Row=7;
+           histButton.Layout.Column=[1,2];
+            
+           %PHOTOBLEACHING Button
+           app.photob=uibutton(grid2,'Text','Correct Photobleaching');
+           app.photob.ButtonPushedFcn = @(src,event)Photobleaching(app);
+           app.photob.Layout.Row=8;
+           app.photob.Layout.Column=[1,2];
            
            % RUN
            app.runButton=uibutton(grid2,'Text','RUN');
-           app.runButton.Layout.Row=8;
+           app.runButton.Layout.Row=9;
            app.runButton.Layout.Column=[1,2];
            app.runButton.ButtonPushedFcn=@(btn,event)RunFunction(app);
            
            %RESTART
            app.restartButton=uibutton(grid2,'Text','RESTART');
-           app.restartButton.Layout.Row=9;
+           app.restartButton.Layout.Row=10;
            app.restartButton.Layout.Column=[1,2];
            app.restartButton.ButtonPushedFcn=@(btn,event)RestartFunction(app);
-           
-           %PHOTOBLEACHING Button
-           app.photob=uibutton(grid2,'Text','Correct Photobleaching');
-           app.photob.ButtonPushedFcn = @(src,event)Photobleaching(app);
-           app.photob.Layout.Row=7;
-           app.photob.Layout.Column=[1,2];
+          
            
            %SAVE
            app.saveButton=uibutton(grid2,'Text','Save data');  
@@ -198,7 +210,7 @@ classdef DrugClass <handle
            
            %TEXT AREA
            app.txaB=uitextarea(grid2,'Editable','off');
-           app.txaB.Layout.Row=11;
+           app.txaB.Layout.Row=12;
            app.txaB.Layout.Column=[1,2];
            
            
@@ -292,12 +304,12 @@ classdef DrugClass <handle
             
             TimePointsCustomization(app); %Here app.tF and app.tL are choosen
             PostSuite2pStim(app,app.fs,app.correctionFactor,app.order,app.ax,app.ax2);
-            istogramma(app)
+            %istogramma(app)
         end
         
         function RestartFunction(app)
             PostSuite2pStim(app,app.fs,app.correctionFactor,app.order,app.ax,app.ax2);
-            istogramma(app)
+            
         end
         
         function globalDelta(app)

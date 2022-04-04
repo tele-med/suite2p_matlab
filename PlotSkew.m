@@ -56,6 +56,7 @@ classdef PlotSkew <handle
         
         peaksOrig
         peaksNew
+        PeakAnalysisButton
         indexesOrig
         indexesNew
         coeff
@@ -88,12 +89,7 @@ classdef PlotSkew <handle
             intervals(app,app.interval);
 
             app.deltaFoF=deltaFoverF(app.iscell,app.in.F,app.in.Fneu,correctionFactor,5);
-            %normalization of dFoF in between -1 1
-%             M=max(max(app.deltaFoF));
-%             m=min(min(app.deltaFoF));
-%             range = M - m;
-%             m01 = (app.deltaFoF - m) / range;
-%             app.deltaFoF=2 * m01 - 1;
+
            
             %inizializzazione deltaFoverFskew con il deltaFoF totale
             app.deltaFoFskew=app.deltaFoF;
@@ -187,6 +183,10 @@ classdef PlotSkew <handle
                 'Position',[10,430,100,20],'Units','normalized','Visible','on',...
                 'CallBack',@(ButtonVis,event)intrestingCells(app));
             
+            app.ButtonCrop=uicontrol('Parent',app.hFig,'Style','pushbutton','String','CropImage',...
+                'Position',[110,430,100,20],'Units','normalized','Visible','on',...
+                'CallBack',@(src,event)croppingFunction(app));
+            
             app.ButtonK=uicontrol('Parent',app.hFig,'Style','pushbutton','String','Keep this cells',...
                 'Position',[10,410,100,20],'Units','normalized','Visible','on',...
                 'CallBack',@(ButtonK,event)keepDeleteCells(app,0));
@@ -220,14 +220,19 @@ classdef PlotSkew <handle
             app.ButtonV=uicontrol('Parent',app.hFig,'Style','pushbutton','String','Variance filtering','Position',[280,20,100,20],'Units','normalized','Visible','on',...
                 'CallBack',@(src,event)varianceFunct(app));
             
-            app.ButtonCrop=uicontrol('Parent',app.hFig,'Style','pushbutton','String','CropImage','Position',[400,20,100,20],'Units','normalized','Visible','on',...
-                'CallBack',@(src,event)croppingFunction(app));
          
-            app.ButtonPeak=uicontrol('Parent',app.hFig,'Style','pushbutton','String','PeakDetection','Position',[520,20,100,20],'Units','normalized','Visible','on',...
+            app.ButtonPeak=uicontrol('Parent',app.hFig,'Style','pushbutton','String','PeakDetection',...
+                'Position',[450,20,100,20],'Units','normalized','Visible','on',...
                 'CallBack',@(src,event)askCoefPeak(app));
             
-            app.ButtonExistingPeak=uicontrol('Parent',app.hFig,'Style','pushbutton','String','LoadPeaks','Position',[520,1,100,20],'Units','normalized','Visible','on',...
+            app.ButtonExistingPeak=uicontrol('Parent',app.hFig,'Style','pushbutton','String','LoadPeaks',...
+                'Position',[560,20,100,20],'Units','normalized','Visible','on',...
                 'CallBack',@(src,event)loadPeaks(app));
+            
+            app.PeakAnalysisButton=uicontrol('Parent',app.hFig,'Style','pushbutton','String','AnalyzePeaks',...
+                'Position',[670,20,100,20],'Units','normalized','Visible','on',...
+                'CallBack',@(src,event)PeaksFunction(app.fs,app.t,app.in.peak.peak.originalTraces,app.indexesOrig));
+            
             
             
             n=app.iscell(:,1);
@@ -624,40 +629,19 @@ classdef PlotSkew <handle
             peak.indexes=app.indexesOrig;
             %peak.peaks=app.peaksOrig;
             
+            
             save(app.fileName,'peak','-append');
             fprintf('peak saved')
         end
         
         function loadPeaks(app)
             try
-                load(app.fileName,'peak')
-                app.indexesOrig=peak.indexes;
+                app.in.peak=load(app.fileName,'peak');
+                app.indexesOrig=app.in.peak.peak.indexes;
                 app.indexesNew=app.indexesOrig;
                 app.peaksNew=app.peaksOrig;
-                %app.peaksOrig=peak.peaks;
-%                 i=1;
-%                 for j=1:round(size(app.in.peak.originalTraces,2)/4)
-%                     figure
-% 
-%                     for k=1:4
-%                         trace=round(peak.originalTraces(:,i),2);
-%                         index=peak.indexes{i};
-% 
-%                         subplot(2,2,k);
-% 
-%                         plot(app.t,trace);
-%                         hold on
-%                         id=round(index*app.fs*60);
-%                         plot(index,trace(id),'*r');
-%                         xlabel('time') 
-%                         ylabel('dF/F with peaks') 
-%                         i=i+1;
-%                         if i>size(app.in.peak.originalTraces,2)
-%                             break
-%                         end
-%                     end
-%               end
-            plotPeaks(app,peak.originalTraces)
+
+            plotPeaks(app,app.in.peak.peak.originalTraces)
             catch e %e is an MException struct
                 fprintf(1,'The identifier was:\n%s',e.identifier);
                 fprintf(1,'There was an error! The message was:\n%s',e.message);

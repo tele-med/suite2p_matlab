@@ -1,14 +1,22 @@
 % T=peak.originalTraces;
 % P=peak.indexes;
-function PeaksFunction(T,P)
+function PeaksFunction(fs,t,T,P)
 %%%T=peak.originalTraces
 %%%P=peak.peaks
 
 
+prompt={'Enter the window size [s]:','Enter the % of missing peaks:'};
+name='Input for Peaks function';
+numlines=1;
+defaultanswer={'50','20'};
+ 
+answer=inputdlg(prompt,name,numlines,defaultanswer);
+ 
+seconds=str2double(answer{1});
+nSaltati=str2double(answer{2});
 
-app.fs=1; %%%%%%da cambiare
 
-seconds=50;
+%seconds=50;
 W=seconds/60; %minutes 
 nCells=size(P,2); %number of cells
 synch=cell(1,nCells); %cell array in which we will save the synchronized cells
@@ -40,7 +48,7 @@ for i=1:nCells
     end
 end
 
-nSaltati=20; %percentuale input utente
+%nSaltati=20; %percentuale input utente
 nSaltati=nSaltati/100;
 synchIDX=cell(size(synch));
 for i=2:nCells
@@ -124,18 +132,23 @@ for i=1:length(synchIDX)
             trace=T(:,ind(j))+j;
             plot(trace)
             hold on
-            id=round(P{ind(j)}*app.fs*60);
+            id=round(P{ind(j)}*fs*60);
             plot(id,trace(id),'*')
             hold on
             text(1,double(mean(trace)),num2str(ind(j)))
 
         catch
-            text(1,1,'No synchronization detected');
+            text(1 ,1,'No synchronization detected');
             continue
         end
     end
         
 end
+
+
+%%
+
+
 
 
 

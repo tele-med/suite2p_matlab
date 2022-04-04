@@ -15,8 +15,8 @@ try
         i=i+1;  
     end
 catch
-    display('Wrong type of folder, cant find the deleted black frames written inside []')
     
+    app.txaB.Value='Wrong type of folder, cant find the deleted black frames written inside []';
     return
     
 end

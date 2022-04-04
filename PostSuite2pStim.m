@@ -37,7 +37,25 @@ interval(1,tF:tL)=1;
     %si è assestato, dato che ho somministrato il farmaco molto prima e c'è
     %stato il tempo di raggiungere una risposta "definitiva"
     m=mean(dFoverF(:,tL-fs*60:tL)')';  
-    % m=mean(dFoverF(:,tF+fs*60:tL)')';
+  
+    
+    try
+        m(app.in.elimDuringCalib)=[];
+        figure
+       
+        idxs2p=app.idx_cell(app.in.elimDuringCalib)-1;
+        for i=1:length(app.in.elimDuringCalib)
+            plot(time,dFoverF(app.in.elimDuringCalib(i),:)+i)
+            hold on
+            text(time(1),i,num2str(idxs2p(i)))
+        end
+        title('dFoF of the cells deleted during calibration')
+        xlabel('time[min]')
+        ylabel('dFoF')
+        
+    catch
+        disp('No eliminated traces during calibration')
+    end
     
     idxU=m>=cutH;   %up se hanno un dFoverF>=cut %indici MATLAB
     dfUp=zeros(1,size(dFoverF,2));
@@ -72,7 +90,7 @@ interval(1,tF:tL)=1;
         plot(time,dfDown,'g','Parent',ax);
         str2=append('INHIBITED ',len);
         x=time(10);
-        y=double(round(max(dfDown),1));
+        y=double(round(min(dfDown),1));
 
         text(x,y,str2,'Color','green','Parent',ax)
         hold (ax,'on')
