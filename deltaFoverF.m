@@ -7,7 +7,7 @@ function deltaFoF = deltaFoverF(iscell,F,Fneu,correctionFactor,order,tStim)
 %OPTIONAL PARAMETERS:
 %4)alpha   to use in Fcorrected=F-alpha*Fneu. If not specified alpha=0.9 
 %5)order   order of the median filter, default=5
-%6)tStim   time of drug application/stimuli,if you introduced one.
+%6)tStim   time of drug application/stimuli,if you introduced one in samples.
 
 
 if nargin <3

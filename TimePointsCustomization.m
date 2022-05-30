@@ -11,36 +11,13 @@ mediaF=mean(app.in.F);
 plot(mediaF)
 hold on
 
-% try
-%     %finding all the intervals
-%     idx=1;
-%     i=1;
-%     while length(idx)>=1
-%         t(i)=str(idx);
-%         sub=str-t(i);
-%         idx=find(sub>20,1,'first');
-%         i=i+1;  
-%     end
-% catch
-%     display('Wrong type of folder, cant find the deleted black frames written inside []')
-%     customization(app);
-%     app.start=1; %the start is 1 as default (start of the signal)
-%     app.stop=size(app.in.F,2); 
-%     app.deltaFoF=deltaFoverF(app.in.iscell,app.in.F,app.in.Fneu,app.correctionFactor,app.order,app.tF);
-%     app.deltaFoFCut=app.deltaFoF(:,app.start:app.stop);
-%     app.t=app.start/app.fs:1/app.fs:app.stop/app.fs;%size(app.deltaFoF,2)/app.fs;
-%     %app.t(end)=[];
-%     app.t=app.t/60;
-% 
-%     return
-% end
 
 t=[app.tF,app.tL];
 
 for i=1:length(t)
-    xline(t(i),'--k')
+    xline(t(i),'--k');
     hold on
-    text(t(i),double(round(mean(mediaF))),'blackfr')
+    text(t(i),double(round(mean(mediaF))),'blackfr');
 end
 
 xlabel('samples')
@@ -64,7 +41,7 @@ if strcmp(answer{1},'all')==0
     end
 end
 
-%if I wanto to define intervals
+%if I want to define intervals
 if strcmp(answer{1},defaultanswer{1})==0
     
     hold on
@@ -104,14 +81,7 @@ switch answer
         
 end
 
-app.deltaFoF=deltaFoverF(app.in.iscell,app.in.F,app.in.Fneu,app.correctionFactor,app.order,app.tF);
-app.deltaFoFCut=app.deltaFoF(:,app.start:app.stop);
-app.t=app.start/app.fs:1/app.fs:app.stop/app.fs;%size(app.deltaFoF,2)/app.fs;
-%app.t(end)=[];
-app.t=app.t/60;
-
-
-    function customization(app)
+function customization(app)
         prompt2={'Start of the baseline [sample]:','End of the baseline,drug application [sample]:','End of drug application [sample]:'};
         nameprompt='Custom';
         numlin=1;
@@ -120,10 +90,22 @@ app.t=app.t/60;
         opts.WindowStyle= 'normal';
         answ=inputdlg(prompt2,nameprompt,numlin,defaultansw,opts);
         app.start=str2double(answ{1});
-        app.tF=str2double(answ{2});
-        app.tL=str2double(answ{3});
+        app.in.F=app.in.F(:,app.start:app.stop);
+        app.in.Fneu=app.in.Fneu(:,app.start:app.stop);
+        app.tF=str2double(answ{2})-app.start+1;
+        app.tL=str2double(answ{3})-app.start+1;
+        app.stop=app.stop-app.start+1;
+        app.start=app.start-app.start+1;
         t(1)=app.tF;
         t(2)=app.tL;
     end
         
+
+app.deltaFoF=deltaFoverF(app.in.iscell,app.in.F,app.in.Fneu,app.correctionFactor,app.order,app.tF);
+app.deltaFoFCut=app.deltaFoF(:,app.start:app.stop);
+app.t=app.start/app.fs:1/app.fs:app.stop/app.fs;
+app.t=app.t/60;
+
+
+    
 end

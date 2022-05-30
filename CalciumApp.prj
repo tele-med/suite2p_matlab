@@ -3,11 +3,11 @@
     <param.appname>CalciumApp</param.appname>
     <param.icon />
     <param.icons />
-    <param.version>1.0</param.version>
-    <param.authnamewatermark />
+    <param.version>2.0</param.version>
+    <param.authnamewatermark>oleksandra fanari</param.authnamewatermark>
     <param.email />
     <param.company />
-    <param.summary>Calcium Imaging Analysis Application</param.summary>
+    <param.summary />
     <param.description />
     <param.screenshot />
     <param.guid />
@@ -45,10 +45,9 @@
     <unset>
       <param.icon />
       <param.icons />
-      <param.version />
-      <param.authnamewatermark />
       <param.email />
       <param.company />
+      <param.summary />
       <param.description />
       <param.screenshot />
       <param.guid />
@@ -90,6 +89,7 @@
       <file>${PROJECT_ROOT}\buttonPressed.m</file>
       <file>${PROJECT_ROOT}\Calibration.m</file>
       <file>${PROJECT_ROOT}\clickHistFcn.m</file>
+      <file>${PROJECT_ROOT}\correlationPeaks.m</file>
       <file>${PROJECT_ROOT}\createImage.m</file>
       <file>${PROJECT_ROOT}\createRASTER.m</file>
       <file>${PROJECT_ROOT}\cropArea.m</file>

@@ -24,8 +24,8 @@ end
 
 app.start=1; %the start is 1 as default (start of the signal)
 app.stop=size(app.in.F,2); 
-app.deltaFoF=deltaFoverF(app.in.iscell,app.in.F,app.in.Fneu,app.correctionFactor,app.order,app.tF);
-app.deltaFoFCut=app.deltaFoF(:,app.start:app.stop);
+%app.deltaFoF=deltaFoverF(app.in.iscell,app.in.F,app.in.Fneu,app.correctionFactor,app.order,app.tF);
+%app.deltaFoFCut=app.deltaFoF(:,app.start:app.stop);
 app.t=app.start/app.fs:1/app.fs:app.stop/app.fs;
 app.t=app.t/60;
 app.tL=t(2); 

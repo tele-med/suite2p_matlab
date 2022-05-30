@@ -24,7 +24,7 @@ ylabel('mean dF/F of the highlighted cells')
 suite2p=app.idx_cell(indexes)-1;
 
 id=round(length(suite2p)/3);
-text(0,double(max(m)),{num2str(suite2p(1:id)'),num2str((suite2p(id+1:2*id))'),num2str((suite2p(2*id+1:end))')},'FontSize',7,'Color','r');
+text(app.t(1),double(max(m)),{num2str(suite2p(1:id)'),num2str((suite2p(id+1:2*id))'),num2str((suite2p(2*id+1:end))')},'FontSize',7,'Color','r');
 disp(suite2p)
 
 

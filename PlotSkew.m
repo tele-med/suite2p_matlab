@@ -231,7 +231,7 @@ classdef PlotSkew <handle
             
             app.PeakAnalysisButton=uicontrol('Parent',app.hFig,'Style','pushbutton','String','AnalyzePeaks',...
                 'Position',[670,20,100,20],'Units','normalized','Visible','on',...
-                'CallBack',@(src,event)PeaksFunction(app.fs,app.t,app.in.peak.peak.originalTraces,app.indexesOrig));
+                'CallBack',@(src,event)findPeakSynch(app));
             
             
             
@@ -649,6 +649,12 @@ classdef PlotSkew <handle
             end
 
         end
+        
+        function findPeakSynch(app)
+            PeaksFunction(app.fs,app.t,app.in.peak.peak.originalTraces,app.indexesOrig);
+            correlationPeaks(app.in.peak.peak.originalTraces,app.indexesOrig);
+        end
+            
         
         function indietro(app,figHandler)
             app.ButtonI=uicontrol('Parent',figHandler,'Style','pushbutton','String','<<Restart',...

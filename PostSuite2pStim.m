@@ -36,28 +36,18 @@ interval(1,tF:tL)=1;
     %perché così lavoro su un momento in cui il comportamento della cellula
     %si è assestato, dato che ho somministrato il farmaco molto prima e c'è
     %stato il tempo di raggiungere una risposta "definitiva"
-    m=mean(dFoverF(:,tL-fs*60:tL)')';  
+    tHalf=round((tL-tF)/2);
+    m=mean(dFoverF(:,tL-tHalf:tL)')';  
   
     
     try
-        m(app.in.elimDuringCalib)=[];
-        figure
-       
-        idxs2p=app.idx_cell(app.in.elimDuringCalib)-1;
-        for i=1:length(app.in.elimDuringCalib)
-            plot(time,dFoverF(app.in.elimDuringCalib(i),:)+i)
-            hold on
-            text(time(1),i,num2str(idxs2p(i)))
-        end
-        title('dFoF of the cells deleted during calibration')
-        xlabel('time[min]')
-        ylabel('dFoF')
-        
+       nElim=length(app.in.elimDuringCalib); %number of excluded cells
     catch
         disp('No eliminated traces during calibration')
     end
     
     idxU=m>=cutH;   %up se hanno un dFoverF>=cut %indici MATLAB
+    app.indexesExcited=idxU;
     dfUp=zeros(1,size(dFoverF,2));
     len=mat2str(sum(idxU));
     if sum(idxU)>=1
@@ -75,8 +65,11 @@ interval(1,tF:tL)=1;
         text(x,y,str1,'Color','red','Parent',ax)
         hold (ax,'on')
     end
+    
+    
  
     idxD=m<=cutL;  %down se hanno un dFoverF<cutL (negativo)
+    app.indexesInhibited=idxD;
     dfDown=zeros(1,size(dFoverF,2));
     len=mat2str(sum(idxD));
     if sum(idxD)>=1
@@ -97,7 +90,9 @@ interval(1,tF:tL)=1;
         
     end
 
+    
     idxM=(m>cutL & m<cutH); %middle
+    app.indexesNoResp=idxM;
     dfMiddle=zeros(1,size(dFoverF,2));
     len=mat2str(sum(idxM));
     if sum(idxM)>=1
@@ -121,7 +116,8 @@ interval(1,tF:tL)=1;
     xline(tL,'-.',{'Wash out',round(tL,2)},'Parent',ax);
     xlabel('Time [min]','Parent',ax)
     ylabel('dF/F averaged trace','Parent',ax)
-    title(sprintf('Gouping %d cells in excited-inhibited-no response',size(dFoverF,1)),'Parent',ax);
+    title(sprintf('Tot cells:%d | excluded:%d | cutL,cutH: %.1f,%.1f | PB: %s',...
+          size(dFoverF,1),nElim,cutL,cutH,app.typePB),'Parent',ax);
     m=min(min([dfMiddle' dfDown' dfUp']))-2;
     M=max(max([dfMiddle' dfDown' dfUp']))+2;
     ylim(ax,[m M])

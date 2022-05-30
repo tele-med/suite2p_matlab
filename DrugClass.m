@@ -21,7 +21,7 @@ classdef DrugClass <handle
         start
         stop
         in
-        idx_cell
+        idx_cell %defined in MenuSelection
         IDX
         Line
         deleted
@@ -35,6 +35,7 @@ classdef DrugClass <handle
         deltaFoF
         deltaFoFCut
         t
+        typePB %type of photobleaching correction
 
         order
         filterField
@@ -63,6 +64,13 @@ classdef DrugClass <handle
 
         buttonDelete
         
+        
+        indexesExcited
+        indexesInhibited
+        indexesNoResp
+        
+        idxPlot
+        
     end
     
     methods
@@ -70,6 +78,7 @@ classdef DrugClass <handle
         function app=DrugClass
             
             %costruttore
+            app.typePB='noCorrection';
             app.type='m';
             app.Figure=uifigure('Name','Drug Application Experiment');
             app.Figure.Position=[115   221   1300   530];
@@ -169,7 +178,7 @@ classdef DrugClass <handle
            
            
            % calibration editField
-           app.calibrationField=uieditfield(grid2,'ValueChangedFcn',@(src,event)takeValue(app,'calib'));
+           app.calibrationField=uieditfield(grid2,'ValueChangedFcn',@(src,event)takeValue(app,'hist'));
            app.calibrationField.Layout.Row=6;
            app.calibrationField.Layout.Column=2;
            app.calibrationValueH=8;
@@ -231,10 +240,25 @@ classdef DrugClass <handle
             
             app.buttonDelete=uibutton(p2,'Text','Delete Trace','Position',[2,2,200,20]);
             app.buttonDelete.ButtonPushedFcn = @(src,event)deleteTrace(app);
+            
+            buttonVisualizeExc=uibutton(p2,'Text','E','Position',[220,2,20,20]);
+            buttonVisualizeExc.ButtonPushedFcn = @(src,event)visualizeTrace(app,'E');
+            
+            buttonVisualizeInh=uibutton(p2,'Text','I','Position',[250,2,20,20]);
+            buttonVisualizeInh.ButtonPushedFcn = @(src,event)visualizeTrace(app,'I');
+            
+            buttonVisualizeNoR=uibutton(p2,'Text','NR','Position',[280,2,25,20]);
+            buttonVisualizeNoR.ButtonPushedFcn = @(src,event)visualizeTrace(app,'NR');
+            
+            
           
         end
         
         function takeValue(app,label)
+            %INPUTS: app,label
+            %labels: 'fs'(frequency) 'a'(alpha field)
+            %         'o'(order)      'c' (cut levels Low and High) 
+            %         'hist'(histogram levels) 
             switch label
                 case 'fs'
                     app.fs=app.fsField.Value;
@@ -245,8 +269,19 @@ classdef DrugClass <handle
                 case 'c'
                     v=split(app.cutField.Value,',');
                     app.cutL=str2double(v{1});
-                    app.cutH=str2double(v{2});
-                case 'calib'
+                    try
+                        app.cutH=str2double(v{2});
+                    catch
+                        if app.cutL<0
+                            app.cutH=-app.cutL;
+                        else
+                            app.cutH=app.cutL;
+                            app.cutL=-app.cutH;
+                        end
+                            format long
+                            app.cutField.Value=sprintf('%.1f,%.1f',app.cutL,app.cutH);
+                    end
+                case 'hist'
                     v=split(app.calibrationField.Value,',');
                     app.calibrationValueL=str2double(v{1});
                     app.calibrationValueH=str2double(v{2});
@@ -288,26 +323,176 @@ classdef DrugClass <handle
             Fig2=figure();
             set(Fig2, 'Visible', 'off');
             copyobj(app.ax,Fig2);
-            print(Fig2,'MatlabResults/Groups.png','-dpng','-r300')
+            
+            date=char(datetime('now'));
+            date= regexprep(date, ':+', '');
+            date= regexprep(date, ' +', '-');
+            title=append('MatlabResults/',date,'Groups.png');
+            print(Fig2,title,'-dpng','-r300')
             
             m=[app.dfUp;app.dfMiddle;app.dfDown;app.time;app.interval]';
             
             iscell=app.in.iscell;
             save('Fall.mat','iscell','-append');
-            writematrix(app.deleted,'MatlabResults/deletedCells.txt');
-            writematrix(m,'MatlabResults/Up-Middle-Down-time-intervals.txt')
+            
+            title=append('MatlabResults/',date,'deletedCells.txt');
+            writematrix(app.deleted,title);
+            
+            title=append('MatlabResults/',date,'Exc-NoResp-Inh-t-01.txt');
+            writematrix(m,title);
             
             set(app.saveButton,'backg',col);
+            
+            title=append('MatlabResults/',date,'Excited.txt');
+            writematrix(app.deltaFoF(app.indexesExcited,:)',title);
+            
+            title=append('MatlabResults/',date,'NoResponse.txt');
+            writematrix(app.deltaFoF(app.indexesNoResp,:)',title);
+            
+            title=append('MatlabResults/',date,'Inhibited.txt');
+            writematrix(app.deltaFoF(app.indexesInhibited,:)',title);
+            
+        end
+        
+        
+        function visualizeTrace(app,type)
+            
+            M=[];
+            suite2p=[];
+            
+            switch type
+                case 'E'
+                    M=app.deltaFoFCut(app.indexesExcited,:);
+                    suite2p=find(app.indexesExcited==1);
+                    
+                case 'I'
+                    M=app.deltaFoFCut(app.indexesInhibited,:);
+                    suite2p=find(app.indexesInhibited==1);
+                case 'NR'
+                    M=app.deltaFoFCut(app.indexesNoResp,:);
+                    suite2p=find(app.indexesNoResp==1);
+            end
+            
+            if length(suite2p)>0
+                suite2p=app.idx_cell(suite2p)-1;
+
+                hFig=figure();
+                axes=gca;
+                app.idxPlot=1;
+
+                plot(M(app.idxPlot,:))
+                %text(1,double(mean(M(app.idxPlot,:))),num2str(suite2p(1)))
+                ylabel('dFoF')
+                xlabel('sample')
+                title(sprintf('idx:%d   | %d/%d',suite2p(1),app.idxPlot,size(M,1)))
+
+                ButtonForward=uicontrol('Parent',hFig,'Style','pushbutton','String','>',...
+                'Position',[30,2,20,20],'Units','normalized','Visible','on',...
+                'CallBack',@(src,event)forward(app,M,suite2p,axes));
+
+                ButtonBack=uicontrol('Parent',hFig,'Style','pushbutton','String','<',...
+                'Position',[2,2,20,20],'Units','normalized','Visible','on',...
+                'CallBack',@(src,event)back(app,M,suite2p,axes));            
+            end
+  
+        end
+        
+        
+        function forward(app,M,suite2p,axes)
+            app.idxPlot=app.idxPlot+1;
+            
+            if app.idxPlot>size(M,1)
+                app.idxPlot=1;
+            end
+            
+                
+                plot(M(app.idxPlot,:),'Parent',axes)
+                %text(1,double(mean(M(app.idxPlot,:))),num2str(suite2p(app.idxPlot)))
+                ylabel('dFoF')
+                xlabel('sample')
+                title(sprintf('idx:%d   | %d/%d',suite2p(app.idxPlot),app.idxPlot,size(M,1)))
+       
+        end
+        
+        function back(app,M,suite2p,axes)
+            app.idxPlot=app.idxPlot-1;
+            
+            if app.idxPlot<1
+                app.idxPlot=1;
+            end
+         
+            plot(M(app.idxPlot,:),'Parent',axes)
+            %text(1,double(mean(M(app.idxPlot,:))),num2str(suite2p(app.idxPlot)))
+            ylabel('dFoF')
+            xlabel('sample')
+            title(sprintf('idx:%d   | %d/%d',suite2p(app.idxPlot),app.idxPlot,size(M,1)))
         end
         
         function RunFunction(app)
             
+            app.in=load(app.path);
+            app.idx_cell=find(app.in.iscell(:,1)==1);
+            fprintf('Length:%d',length(app.in.F))
+            
+            try
+                %m(app.in.elimDuringCalib)=[]; %discarding the excluded cells
+                nElim=length(app.in.elimDuringCalib); %number of excluded cells
+                
+
+                figure
+                idxs2p=app.in.elimDuringCalib-1;
+                for i=1:length(app.in.elimDuringCalib)
+                    sign=app.in.F(app.in.elimDuringCalib(i),:);
+                    time=0/app.fs:1/app.fs:(length(sign)-1)/app.fs;
+                    time=time/60;
+                    plot(time,sign+1000*i);
+                    hold on
+                    text(1,double(mean(sign(1:100))+1000*i),num2str(idxs2p(i)));
+                end
+                title('F of the cells deleted during calibration')
+                xlabel('time')
+                ylabel('F trace')
+
+                %app.in.F(app.in.elimDuringCalib,:)=[];
+                %app.in.Fneu(app.in.elimDuringCalib,:)=[];
+                app.in.iscell(app.in.elimDuringCalib,:)=0;
+                 
+                for i =1:length(app.in.elimDuringCalib)
+                   s=zeros(size(app.idx_cell));
+                   s(app.in.elimDuringCalib(i):end)=1;
+                   app.idx_cell=app.idx_cell+s;
+                end
+                app.idx_cell=find(app.in.iscell(:,1)==1);
+                    
+            catch
+                disp('No eliminated traces during calibration')
+            end
+            
+            
             TimePointsCustomization(app); %Here app.tF and app.tL are choosen
             PostSuite2pStim(app,app.fs,app.correctionFactor,app.order,app.ax,app.ax2);
-            %istogramma(app)
+            
         end
         
         function RestartFunction(app)
+            
+%             %new load 
+%             app.in=load(app.path);
+%             takeValue(app,'fs'); takeValue(app,'a'); takeValue(app,'o'); takeValue(app,'c'); takeValue(app,'hist')
+%             try
+%                 %m(app.in.elimDuringCalib)=[]; %discarding the excluded cells
+%                 %nElim=length(app.in.elimDuringCalib); %number of excluded cells
+%                 app.in.F(app.in.elimDuringCalib,:)=[];
+%                 app.in.Fneu(app.in.elimDuringCalib,:)=[];
+%                 app.in.iscell(app.in.elimDuringCalib,:)=[];
+%                 app.idx_cell=find(app.in.iscell(:,1)==1);     
+%             catch
+%                 disp('No eliminated traces during calibration')
+%             end
+%             
+%              app.in.F=app.in.F(:,app.start:app.stop);
+%              app.in.Fneu=app.in.Fneu(:,app.start:app.stop);
+%             
             PostSuite2pStim(app,app.fs,app.correctionFactor,app.order,app.ax,app.ax2);
             
         end

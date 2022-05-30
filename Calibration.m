@@ -27,6 +27,20 @@ classdef Calibration <handle
         indWNS
         indSlope
         indNSlope
+        positive %the one considered for the threshold extraction
+        negative %the inhibited cells
+        
+        %these indexes are used just for the one-by-one representation, in
+        %order to be able to visualize the selected or the discarded
+        %indexes indipendently by the user choosen method (through the radio buttons) 
+        %The selection methods work on the positive traces (no inhibited ones are took
+        %in consideration for computing the positive excitation threshold).
+        %therefore the length(idx_cell) is not always the sum of Selected
+        %and Not Selected indexes, as in the idx_cell we have the eventually inhibited
+        %indexes, thus length(idx_cell)could be >= length(idxNS)+length(idxS)
+        idxNS %indexes Not selected in this moment (can be the Wikoxon or the Slope)
+        idxS %indexes selected in this moment (can be Wilcoxon or the Slope)
+        indIN %indexes of the inhibited cells
         
         Figure
         txaB
@@ -45,15 +59,17 @@ classdef Calibration <handle
         idxUser     %indexes selected by user for visualization (suite2p)
         idxMatlab   %indexes selected by user in matlab coordinates
         ax
+        
+        idxPlot
     end
     
     methods
         function obj = Calibration
             %Calibration Construct an instance of this class
-            %   Detailed explanation goes here
+            %Detailed explanation goes here
             
             obj.correctionFactor=0.7;
-            obj.order=100;
+            %obj.order=10; %% va modificato in funzioneSoglia
             
             obj.Figure=uifigure('Name','Calibration');
             obj.Figure.Position=[115   321   1000   330];
@@ -77,9 +93,9 @@ classdef Calibration <handle
            obj.PanelOutput=uipanel(gB);
            obj.PanelOutput.Layout.Column=2;
            obj.PanelOutput.Layout.Row=1;
-           grid4 = uigridlayout(obj.PanelOutput,[5 2]);
+           grid4 = uigridlayout(obj.PanelOutput,[8 2]);
            grid4.ColumnWidth = {'2x','1x'};
-           grid4.RowHeight = {'4x','1x','1x','1x','1x'};
+           grid4.RowHeight = {'4x','1x','1x','1x','1x','1x'};
            initializePanelOutput(obj,grid4) 
         end  
            
@@ -95,9 +111,9 @@ classdef Calibration <handle
            tStartLabel.Layout.Row=2;
            tStartLabel.Layout.Column=1;
            % tStart edit field
-           obj.tStartField=uieditfield(grid2,'numeric','ValueChangedFcn',@(src,event)takeValue(obj,'start'));
-           obj.tStart=1;
-           obj.tStartField.Value = 1;
+           obj.tStartField=uieditfield(grid2,'ValueChangedFcn',@(src,event)takeValue(obj,'start'));
+           obj.tStartField.Value = 'A'; %automatico
+           obj.tStart='A';
            
            
            % tK Label
@@ -137,7 +153,7 @@ classdef Calibration <handle
            obj.inclinationField.Value = 0.1;
            
            %run button
-           runButton=uibutton(grid2,'Text','RUN', 'ButtonPushedFcn',@(src,event)funzioneSoglia(obj)); %da fare meglio
+           runButton=uibutton(grid2,'Text','RUN', 'ButtonPushedFcn',@(src,event)funzioneSoglia(obj)); 
            runButton.Layout.Row=7;
            runButton.Layout.Column=[1,2];
            
@@ -149,15 +165,15 @@ classdef Calibration <handle
             
            %text area
            obj.txaB=uitextarea(grid);
-           obj.txaB.Layout.Row=[1,5];
+           obj.txaB.Layout.Row=[1,8];
            obj.txaB.Layout.Column=1;
            
            obj.bg = uibuttongroup(grid,'SelectionChangedFcn',@(src,event)radioButtonChanged(obj));
            obj.bg.Layout.Row=1;
            obj.bg.Layout.Column=2;
-           rb1 = uiradiobutton(obj.bg,'Position',[10 100 91 15]);
-           rb2 = uiradiobutton(obj.bg,'Position',[10 80 91 15]);
-           rb3 = uiradiobutton(obj.bg,'Position',[10 60 91 15]);
+           rb1 = uiradiobutton(obj.bg,'Position',[10 50 91 15]);
+           rb2 = uiradiobutton(obj.bg,'Position',[10 30 91 15]);
+           rb3 = uiradiobutton(obj.bg,'Position',[10 10 91 15]);
            rb1.Text = 'cutMedian';
            rb2.Text = 'cutWilcoxon';
            rb3.Text = 'cutSlope';
@@ -166,13 +182,25 @@ classdef Calibration <handle
            confirmButton.Layout.Column=2;
            confirmButton.Layout.Row=2;
            
+           onebyoneButtonM=uibutton(grid,'Text','o-by-o maintained','ButtonPushedFcn', @(src,event)visualizeOBO(obj,'M'));
+           onebyoneButtonM.Layout.Column=2;
+           onebyoneButtonM.Layout.Row=4;
+           
+           onebyoneButtonD=uibutton(grid,'Text','o-by-o discarded','ButtonPushedFcn', @(src,event)visualizeOBO(obj,'D'));
+           onebyoneButtonD.Layout.Column=2;
+           onebyoneButtonD.Layout.Row=5;
+           
+           onebyoneButtonINH=uibutton(grid,'Text','o-by-o inhibited','ButtonPushedFcn', @(src,event)visualizeOBO(obj,'I'));
+           onebyoneButtonINH.Layout.Column=2;
+           onebyoneButtonINH.Layout.Row=6;
            
            obj.idxField=uieditfield(grid,'Value','cell idx separated by commas');
            obj.idxField.Layout.Column=2;
-           obj.idxField.Layout.Row=4;
+           obj.idxField.Layout.Row=7;
            idxButton=uibutton(grid,'Text','Visualize','ButtonPushedFcn', @(src,event)visualizeTraces(obj));
            idxButton.Layout.Column=2;
-           idxButton.Layout.Row=5;
+           idxButton.Layout.Row=8;
+           
             
         end
         
@@ -183,7 +211,7 @@ classdef Calibration <handle
                 case 'fs'
                     obj.fs=obj.fsField.Value;
                 case 'start'
-                    obj.tStart=obj.tStartField.Value;
+                    obj.tStart=str2double(obj.tStartField.Value);
                 case 'stop'
                     obj.tStop=obj.tStopField.Value;
                 case 'k'
@@ -202,14 +230,14 @@ classdef Calibration <handle
             takeValue(obj,'idx');
             idx=obj.idxUser+1;  %from suite2p to matlab indexing sys
             [~,idx]=ismember(idx,obj.idx_cell);
-            obj.t=obj.tStart/obj.fs:1/obj.fs:length(obj.dFoF)/obj.fs;
+            obj.t=obj.tStart/obj.fs:1/obj.fs:obj.tStop/obj.fs;
             obj.t=obj.t/60;
             
             figure
             for i=1:length(idx)
-                plot(obj.t,obj.dFoF(idx(i),:)+i)
+                plot(obj.t,obj.dFoF(idx(i),obj.tStart:obj.tStop)+i-1)
                 hold on
-                text(obj.t(1),i,num2str(obj.idxUser(i)))
+                text(obj.t(1),i-1,num2str(obj.idxUser(i)))
             end
             
         end
@@ -225,10 +253,7 @@ classdef Calibration <handle
                     obj.path=append(obj.path,'\',obj.file);
                     obj.in=load(obj.path);
                     obj.idx_cell=find(obj.in.iscell(:,1)==1);
-                    obj.dFoF=deltaFoverF(obj.in.iscell,obj.in.F,obj.in.Fneu,obj.correctionFactor,obj.order,obj.tK);
-                    
 
-                    
                 catch
                     obj.txaB.Value='NO FILE SELECTED';
                 end
@@ -237,25 +262,74 @@ classdef Calibration <handle
         end
            
         function funzioneSoglia(obj)
-            [obj.soglie,obj.indWS,obj.indWNS,obj.indSlope,obj.indNSlope]=sceltaSoglie(obj.fs,obj.correctionFactor,obj.order,obj.tStart,obj.tK,obj.tStop,obj.dFoF);
-            obj.txaB.Value=sprintf('-cutMedian: %0.5f \n-cutWilcoxon: %0.5f \n-cutSlope: %0.5f\nPath: %s',obj.soglie(1),obj.soglie(2),obj.soglie(3),obj.path);%obj.path,'---cutMedian ',num2str(obj.soglie(;1))
-                                   
+            
+           if obj.tStartField.Value=='A'
+               obj.tStart=double(obj.tK-(obj.tStop-obj.tK)); %automatic assessment 
+               v=sprintf('%d',obj.tStart);
+               obj.tStartField.Value = v; %automatico
+
+               else 
+                   takeValue(obj,'start');
+           end
+           
+           obj.in=load(obj.path);
+           obj.idx_cell=find(obj.in.iscell(:,1)==1);
+           
+           takeValue(obj,'stop');
+           takeValue(obj,'k');
+           obj.order=10;
+           obj.in.F=obj.in.F(:,obj.tStart:obj.tStop);
+           obj.in.Fneu=obj.in.Fneu(:,obj.tStart:obj.tStop);
+           obj.tStop=obj.tStop-obj.tStart+1;
+           obj.tK=obj.tK-obj.tStart+1;
+           
+           
+           obj.tStart=obj.tStart-obj.tStart+1;
+           
+           obj.dFoF=deltaFoverF(obj.in.iscell,obj.in.F,obj.in.Fneu,obj.correctionFactor,obj.order,obj.tK);
+           [obj.soglie,obj.indWS,obj.indWNS,obj.indSlope,obj.indNSlope, obj.positive,obj.negative]=sceltaSoglie(obj.fs,obj.correctionFactor,obj.order,obj.tStart,obj.tK,obj.tStop,obj.dFoF);
+           %gli indici che ottengo sono riferiti a dFoF, quindi sono quelli
+           %di idx_cell, perciò obj.indWS=9 significa che sto prendendo il
+           %9° elemento del vettore dFoF, e quindi il 3°elemento di
+           %idx_cell, che non per forza è 3, ma potrebbe essere un indice
+           %diverso (perché magari in posizione 2 e 3 di iscell avevo un 0)
+           %ex: iscell=[1, 0.899; 0 0.7999; 0 0.675; 1 0.7892; 1 0.654]
+           %quindi idx_cell=[1 4 5 6 7 8 9 10 11] qui idx_cell(3)=5.
+           obj.txaB.Value=sprintf('-cutMedian: %0.5f \n-cutWilcoxon: %0.5f \n-cutSlope: %0.5f\nPath: %s',obj.soglie(1),obj.soglie(2),obj.soglie(3),obj.path);
+           %default for o-by-o visualization
+%            obj.idxS=obj.idx_cell'; 
+%            obj.idxS(obj.negative)=[];
+           obj.idxS=1:1:size(obj.dFoF,1);%as default we use the Median approach, which is the already selected choice in radio button group
+           obj.idxS(obj.negative)=[];
+           obj.idxNS=[]; %the median does not discard any trace
+           %the obj.negative is the same for all
+        
         end
         
         
         function radioButtonChanged(obj)
            
             text=obj.bg.SelectedObject.Text;
+            
             switch text
                 case 'cutMedian'
-                    
+                      obj.idxS=1:1:size(obj.dFoF,1);%all the indexes, because the median approach does not discard any trace
+                      obj.idxS(obj.negative)=[];
                 case 'cutWilcoxon'
-                    slider(obj,obj.indWS,'S')
-                    slider(obj,obj.indWNS,'NS')
+                    
+                    if length(obj.indWNS)>1
+                        slider(obj,obj.indWNS,'NS') %with the slider we just visualize the not selected, as the selected are usually in a high number, so it's not a nice type of visualization (the traces are very flat and small)
+                        obj.idxNS=obj.indWNS; %the not selected are the Wilcoxon
+                        obj.idxS=obj.indWS;
+                    end
                     
                 case 'cutSlope'
-                    slider(obj,obj.indSlope,'S')
-                    slider(obj,obj.indNSlope,'NS')
+                    
+                    if length(obj.indNSlope)>1
+                        slider(obj,obj.indNSlope,'NS')
+                        obj.idxNS=obj.indNSlope; %the not selected are the Slope
+                        obj.idxS=obj.indSlope;
+                    end
             end
            
         end
@@ -265,28 +339,32 @@ classdef Calibration <handle
             
             switch text
                 case 'cutMedian'
-                    
+                    elimDuringCalib=[];
+                     
                 case 'cutWilcoxon'
                     elimDuringCalib=obj.indWNS;
-                    save('Fall.mat','elimDuringCalib','-append');
+                    
                     
                 case 'cutSlope'
                     elimDuringCalib=obj.indNSlope;
-                    save('Fall.mat','elimDuringCalib','-append');
-                    
+                          
             end
+            
+            save('Fall.mat','elimDuringCalib','-append');
             
         end
         
         
         
         function slider(obj,idx,type)
-            %idx=indexes we are maintaining or discarding
-            %type refers to the type of indexes (maintained or discarded)
+            %idx=indexes we are maintaining/discarding/treating as inhibited, according to
+            %type value
+            %type refers to the type of indexes (maintained M, discarded D or inhibited I)
             idxs2p=obj.idx_cell(idx)-1;
-            
-            obj.t=obj.tStart/obj.fs:1/obj.fs:length(obj.dFoF)/obj.fs;
-            obj.t=obj.t/60;
+            B=(obj.dFoF(idx,obj.tStart:obj.tStop));
+
+            obj.t=obj.tStart/(obj.fs*60):1/(obj.fs*60):obj.tStop/(obj.fs*60);
+            %obj.t=obj.t/60;
             
             app.fig=figure('Position',[621,105,550,650]);
             panel1 = uipanel('Parent',app.fig,'Position',[0,0,500,100]);
@@ -295,8 +373,7 @@ classdef Calibration <handle
             set(panel2,'Position',[0 -1 1 2]);
             set(gca,'Parent',panel2);
             
-            B=(obj.dFoF(idx,:));
-
+            
             for i=1:size(B,1)
                 sign=B(i,:)+5*i;
                 plot(obj.t,sign); 
@@ -329,6 +406,108 @@ classdef Calibration <handle
             end
         end
         
+        
+        
+        function visualizeOBO(obj,type)
+            %I have 3 gorups of cells I can visualize with the o-by-o mode:
+            %maintained, discarded and inhibited cells (by median-slope-wilcoxon)
+            %therefore I have 3 one-by-one buttons for maintained-inhibited
+            %and discarded traces, so i need to insert the type of the
+            %button here, to show the correct indexes.
+            %
+            
+            if type=='M'
+                
+                idx=obj.idxS'; %if the type of button is the one-by-one for the visualization 
+                               %of maintained cells we have to take the idxS
+                               %(significant) indexes
+            end
+            if type=='D'
+                idx=obj.idxNS';
+            end
+            if type=='I' %inhibited
+                idx=obj.negative';
+            end
+                
+                    
+            
+            
+            
+            if size(idx,1)>0
+                
+                %IND=obj.idx_cell(idx); %tutti gli indici
+                traces=obj.dFoF(idx,:);
+                ymin=min(min(traces))-1;
+                ymax=max(max(traces))+1;
+                
+                obj.idxPlot=1;
+                %QUALE CORRETTO?
+                suite2p=obj.idx_cell(idx(obj.idxPlot))-1; %retrieving the suite2p index
+                %suite2p=obj.idx_cell(obj.idxPlot)-1; %retrieving the suite2p index
+                hFig=figure();
+                axes=gca;
+                
+                obj.t=obj.tStart/(obj.fs*60):1/(obj.fs*60):obj.tStop/(obj.fs*60);
+                 
+                %IND=find(obj.idx_cell==); %un solo indice
+                plot(obj.t,obj.dFoF(idx(obj.idxPlot),:));
+                xline(obj.t(obj.tK),'-','Potassium');
+                ylabel('dFoF')
+                xlabel('time')
+                ylim([ymin,ymax])
+                title(sprintf('%d/%d   index:%d',obj.idxPlot,size(idx,1),suite2p(1)))
+            
+                ButtonForward=uicontrol('Parent',hFig,'Style','pushbutton','String','>',...
+                'Position',[30,2,20,20],'Units','normalized','Visible','on',...
+                'CallBack',@(src,event)forward(obj,axes,idx,ymin,ymax));
+
+                ButtonBack=uicontrol('Parent',hFig,'Style','pushbutton','String','<',...
+                'Position',[2,2,20,20],'Units','normalized','Visible','on',...
+                'CallBack',@(src,event)backward(obj,axes,idx,ymin,ymax));     
+            end
+            
+        end
+        
+        
+        function forward(obj,axes,idx,ymin,ymax)
+            
+            obj.idxPlot=obj.idxPlot+1;
+           
+            
+            if obj.idxPlot>size(idx,1)
+                obj.idxPlot=1;
+            end
+            
+                suite2p=obj.idx_cell(idx(obj.idxPlot))-1;
+                %suite2p=obj.idx_cell(obj.idxPlot)-1; %retrieving the suite2p index
+                plot(obj.t,obj.dFoF(idx(obj.idxPlot),:),'Parent',axes)
+                xline(obj.t(obj.tK),'-','Potassium');
+                ylabel('dFoF')
+                xlabel('time')
+                ylim([ymin,ymax])
+                title(sprintf('%d/%d   index:%d',obj.idxPlot,size(idx,1),suite2p))
+        end
+        
+        
+        function backward(obj,axes,idx,ymin,ymax)
+             
+            obj.idxPlot=obj.idxPlot-1;
+            
+            if obj.idxPlot<1
+                obj.idxPlot=1;
+            end
+            suite2p=obj.idx_cell(idx(obj.idxPlot))-1;
+            %suite2p=obj.idx_cell(obj.idxPlot)-1; %retrieving the suite2p index
+            plot(obj.t,obj.dFoF(idx(obj.idxPlot),:),'Parent',axes)
+            xline(obj.t(obj.tK),'-','Potassium');
+            ylabel('dFoF')
+            xlabel('time')
+            ylim([ymin ymax])
+            title(sprintf('%d/%d   index:%d',obj.idxPlot,size(idx,1),suite2p));
+        end
+            
+        
     end
+    
 end
 

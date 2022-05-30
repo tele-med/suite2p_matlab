@@ -9,11 +9,13 @@ classdef Photobleaching <handle
         YL
         YE
         Y
+        typePB
  
     end
     
     methods
         function cl=Photobleaching(parent)
+            cl.typePB='exp';
             f=figure('Name','Photobleaching Correction','Position',[100 200 900 400]);
             signal=parent.in.F-parent.correctionFactor*parent.in.Fneu;
             media=mean(signal(:,parent.start:parent.stop));
@@ -46,15 +48,18 @@ classdef Photobleaching <handle
 %             cl.taglio=[media(1,parent.start:inizio),M*ones(1,pad),media(1,fine:parent.stop)]';
 %             cl.YE=expsmooth(cl.taglio,parent.fs,100);
 %             cl.Y=cl.YE; 
-            
+%             
 %PADDING THE DRUG PERIOD WITH A STRAIGHT LINE GOING FROM THE LAST POINT OF THE BASELINE TO
-%THE FIRST POINT OF THE WO PERIOD
+% %THE FIRST POINT OF THE WO PERIOD
+            media=mean(signal); %ricalcolo la media su tutto il segnale Fcorrected
+                                %ricalcolo il tempo
             y(1)=media(1,inizio);
             y(2)=media(fine);
-            m=(y(2)-y(1))/(time(fine)-time(inizio));
-            q=y(1)-m*time(inizio);
-            pad=m*time(1,inizio+1:fine-1)+q;
-           
+            m=(y(2)-y(1))/(fine/(parent.fs*60)-inizio/(parent.fs*60));
+            q=y(1)-m*inizio/(parent.fs*60);
+            t=inizio/(parent.fs*60):1/(parent.fs*60):fine/(parent.fs*60);
+            pad=m*t(1,1:end-2)+q;
+          
             cl.taglio=[media(1,parent.start:inizio),pad,media(1,fine:parent.stop)]';
             cl.YE=expsmooth(cl.taglio,parent.fs,100);
             cl.Y=cl.YE;
@@ -106,9 +111,11 @@ classdef Photobleaching <handle
                 case 'Exponential'
                     cl.Y=cl.YE;
                     disp('Esponential Photobleaching correction')
+                    cl.typePB='exp';
                 case 'Linear'
                     cl.Y=cl.YL';
                     disp('Linear Photobleaching correction')
+                    cl.typePB='lin';
             end
         end
 
@@ -118,11 +125,13 @@ classdef Photobleaching <handle
             else
                 pb=[zeros(parent.start-1,1);cl.Y;zeros(size(parent.in.F,2)-parent.stop,1)]';
             end
+                parent.typePB=cl.typePB;
                 parent.in.F=parent.in.F-pb;
 %                 parent.in.Fneu=parent.in.Fneu(:,parent.start:parent.stop);
                 media=mean(parent.in.F-parent.correctionFactor*parent.in.Fneu);
                 media=media(1,parent.start:parent.stop);
-                plot(cl.ax, parent.t,media);     
+                plot(cl.ax, parent.t,media);
+                legend(cl.ax,{'original','corrected'})
         end
             
 
