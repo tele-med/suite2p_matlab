@@ -1,0 +1,4 @@
+To install the package and use it as a GUI you need to download just the CalciumApp053022 folder. Then go in the folder containing the for_redistribution_files_only 
+in its name and click on the .exe file.
+
+To use the code from Matlab, download the Source folder, set the matlab path to the just downloaded folder and type CalciumApp in the command window. 
