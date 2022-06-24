@@ -41,7 +41,7 @@ interval(1,tF:tL)=1;
   
     
     try
-       nElim=length(app.in.elimDuringCalib); %number of excluded cells
+        nElim=length(app.in.elimDuringCalib); %number of excluded cells
     catch
         disp('No eliminated traces during calibration')
     end

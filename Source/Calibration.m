@@ -61,6 +61,9 @@ classdef Calibration <handle
         ax
         
         idxPlot
+       
+        
+        logFile
     end
     
     methods
@@ -70,6 +73,8 @@ classdef Calibration <handle
             
             obj.correctionFactor=0.7;
             %obj.order=10; %% va modificato in funzioneSoglia
+            
+            obj.logFile='logMatlab.txt';
             
             obj.Figure=uifigure('Name','Calibration');
             obj.Figure.Position=[115   321   1000   330];
@@ -296,9 +301,27 @@ classdef Calibration <handle
            %ex: iscell=[1, 0.899; 0 0.7999; 0 0.675; 1 0.7892; 1 0.654]
            %quindi idx_cell=[1 4 5 6 7 8 9 10 11] qui idx_cell(3)=5.
            obj.txaB.Value=sprintf('-cutMedian: %0.5f \n-cutWilcoxon: %0.5f \n-cutSlope: %0.5f\nPath: %s',obj.soglie(1),obj.soglie(2),obj.soglie(3),obj.path);
+           
+            date=char(datetime('now'));
+            date= regexprep(date, ':+', '');
+            date= regexprep(date, ' +', '-');
+           
+           if exist(obj.logFile,'file')==2
+               fileID=fopen(obj.logFile,'a'); % open exist file and append contents
+               fprintf(fileID,'\nCalibration RUN %s\n',date);
+               fprintf(fileID,'fs=%d\n',obj.fs);
+               fprintf(fileID,'tStart %s - tK %d - tStop %d\n',obj.tStartField.Value, obj.tKField.Value, obj.tStopField.Value);
+               fprintf(fileID,'-cutMedian: %0.5f \n-cutWilcoxon: %0.5f \n-cutSlope: %0.5f\n',obj.soglie(1),obj.soglie(2),obj.soglie(3));
+           else
+               fileID=fopen(obj.logFile,'w'); % create file and write to it
+               fprintf(fileID,'\nCalibration RUN %s\n',date);
+               fprintf(fileID,'fs=%d\n',obj.fs);
+               fprintf(fileID,'tStart %s - tK %d - tStop %d\n',obj.tStartField.Value, obj.tKField.Value, obj.tStopField.Value);
+               fprintf(fileID,'-cutMedian: %0.5f \n-cutWilcoxon: %0.5f \n-cutSlope: %0.5f\n',obj.soglie(1),obj.soglie(2),obj.soglie(3));
+           end
+           fclose('all');
+           
            %default for o-by-o visualization
-%            obj.idxS=obj.idx_cell'; 
-%            obj.idxS(obj.negative)=[];
            obj.idxS=1:1:size(obj.dFoF,1);%as default we use the Median approach, which is the already selected choice in radio button group
            obj.idxS(obj.negative)=[];
            obj.idxNS=[]; %the median does not discard any trace
@@ -317,7 +340,7 @@ classdef Calibration <handle
                       obj.idxS(obj.negative)=[];
                 case 'cutWilcoxon'
                     
-                    if length(obj.indWNS)>1
+                    if length(obj.indWNS)>=1
                         slider(obj,obj.indWNS,'NS') %with the slider we just visualize the not selected, as the selected are usually in a high number, so it's not a nice type of visualization (the traces are very flat and small)
                         obj.idxNS=obj.indWNS; %the not selected are the Wilcoxon
                         obj.idxS=obj.indWS;
@@ -325,7 +348,7 @@ classdef Calibration <handle
                     
                 case 'cutSlope'
                     
-                    if length(obj.indNSlope)>1
+                    if length(obj.indNSlope)>=1
                         slider(obj,obj.indNSlope,'NS')
                         obj.idxNS=obj.indNSlope; %the not selected are the Slope
                         obj.idxS=obj.indSlope;
@@ -344,13 +367,15 @@ classdef Calibration <handle
                 case 'cutWilcoxon'
                     elimDuringCalib=obj.indWNS;
                     
-                    
                 case 'cutSlope'
                     elimDuringCalib=obj.indNSlope;
                           
             end
             
             save('Fall.mat','elimDuringCalib','-append');
+            obj.txaB.Value=sprintf('-cutMedian: %0.5f \n-cutWilcoxon: %0.5f \n-cutSlope: %0.5f\nPath: %s \nSAVED %s',obj.soglie(1),obj.soglie(2),obj.soglie(3),obj.path,text);
+            fileID=fopen(obj.logFile,'a'); %append mode
+            fprintf(fileID,'\nSAVED %s',text);
             
         end
         
@@ -441,9 +466,7 @@ classdef Calibration <handle
                 ymax=max(max(traces))+1;
                 
                 obj.idxPlot=1;
-                %QUALE CORRETTO?
                 suite2p=obj.idx_cell(idx(obj.idxPlot))-1; %retrieving the suite2p index
-                %suite2p=obj.idx_cell(obj.idxPlot)-1; %retrieving the suite2p index
                 hFig=figure();
                 axes=gca;
                 
@@ -479,7 +502,6 @@ classdef Calibration <handle
             end
             
                 suite2p=obj.idx_cell(idx(obj.idxPlot))-1;
-                %suite2p=obj.idx_cell(obj.idxPlot)-1; %retrieving the suite2p index
                 plot(obj.t,obj.dFoF(idx(obj.idxPlot),:),'Parent',axes)
                 xline(obj.t(obj.tK),'-','Potassium');
                 ylabel('dFoF')
@@ -497,7 +519,6 @@ classdef Calibration <handle
                 obj.idxPlot=1;
             end
             suite2p=obj.idx_cell(idx(obj.idxPlot))-1;
-            %suite2p=obj.idx_cell(obj.idxPlot)-1; %retrieving the suite2p index
             plot(obj.t,obj.dFoF(idx(obj.idxPlot),:),'Parent',axes)
             xline(obj.t(obj.tK),'-','Potassium');
             ylabel('dFoF')

@@ -71,6 +71,7 @@ classdef DrugClass <handle
         
         idxPlot
         
+        logFile
     end
     
     methods
@@ -78,6 +79,7 @@ classdef DrugClass <handle
         function app=DrugClass
             
             %costruttore
+            app.logFile='logMatlab.txt';
             app.typePB='noCorrection';
             app.type='m';
             app.Figure=uifigure('Name','Drug Application Experiment');
@@ -313,8 +315,6 @@ classdef DrugClass <handle
             end
             
             %salvataggio
-            %prompt per scegliere directory di destinazione e poi salvare in
-            %quel path
             col=get(app.runButton,'backg');
             set(app.saveButton,'backg',[0,1,0]);
             
@@ -327,7 +327,9 @@ classdef DrugClass <handle
             date=char(datetime('now'));
             date= regexprep(date, ':+', '');
             date= regexprep(date, ' +', '-');
-            title=append('MatlabResults/',date,'Groups.png');
+            subDir=append('MatlabResults/',date);
+            mkdir(subDir);
+            title=append(subDir,'/','Groups.png');
             print(Fig2,title,'-dpng','-r300')
             
             m=[app.dfUp;app.dfMiddle;app.dfDown;app.time;app.interval]';
@@ -335,21 +337,21 @@ classdef DrugClass <handle
             iscell=app.in.iscell;
             save('Fall.mat','iscell','-append');
             
-            title=append('MatlabResults/',date,'deletedCells.txt');
+            title=append(subDir,'/','deletedCells.txt');
             writematrix(app.deleted,title);
             
-            title=append('MatlabResults/',date,'Exc-NoResp-Inh-t-01.txt');
+            title=append(subDir,'/','Exc-NoResp-Inh-t-01.txt');
             writematrix(m,title);
             
             set(app.saveButton,'backg',col);
             
-            title=append('MatlabResults/',date,'Excited.txt');
+            title=append(subDir,'/','Excited.txt');
             writematrix(app.deltaFoF(app.indexesExcited,:)',title);
             
-            title=append('MatlabResults/',date,'NoResponse.txt');
+            title=append(subDir,'/','NoResponse.txt');
             writematrix(app.deltaFoF(app.indexesNoResp,:)',title);
             
-            title=append('MatlabResults/',date,'Inhibited.txt');
+            title=append(subDir,'/','Inhibited.txt');
             writematrix(app.deltaFoF(app.indexesInhibited,:)',title);
             
         end
@@ -440,12 +442,12 @@ classdef DrugClass <handle
                 
 
                 figure
-                idxs2p=app.in.elimDuringCalib-1;
+                idxs2p=app.idx_cell(app.in.elimDuringCalib)-1;
                 for i=1:length(app.in.elimDuringCalib)
                     sign=app.in.F(app.in.elimDuringCalib(i),:);
-                    time=0/app.fs:1/app.fs:(length(sign)-1)/app.fs;
-                    time=time/60;
-                    plot(time,sign+1000*i);
+                    timeL=0/app.fs:1/app.fs:(length(sign)-1)/app.fs;
+                    timeL=timeL/60;
+                    plot(timeL,sign+1000*i);
                     hold on
                     text(1,double(mean(sign(1:100))+1000*i),num2str(idxs2p(i)));
                 end
@@ -453,8 +455,6 @@ classdef DrugClass <handle
                 xlabel('time')
                 ylabel('F trace')
 
-                %app.in.F(app.in.elimDuringCalib,:)=[];
-                %app.in.Fneu(app.in.elimDuringCalib,:)=[];
                 app.in.iscell(app.in.elimDuringCalib,:)=0;
                  
                 for i =1:length(app.in.elimDuringCalib)
@@ -475,24 +475,7 @@ classdef DrugClass <handle
         end
         
         function RestartFunction(app)
-            
-%             %new load 
-%             app.in=load(app.path);
-%             takeValue(app,'fs'); takeValue(app,'a'); takeValue(app,'o'); takeValue(app,'c'); takeValue(app,'hist')
-%             try
-%                 %m(app.in.elimDuringCalib)=[]; %discarding the excluded cells
-%                 %nElim=length(app.in.elimDuringCalib); %number of excluded cells
-%                 app.in.F(app.in.elimDuringCalib,:)=[];
-%                 app.in.Fneu(app.in.elimDuringCalib,:)=[];
-%                 app.in.iscell(app.in.elimDuringCalib,:)=[];
-%                 app.idx_cell=find(app.in.iscell(:,1)==1);     
-%             catch
-%                 disp('No eliminated traces during calibration')
-%             end
-%             
-%              app.in.F=app.in.F(:,app.start:app.stop);
-%              app.in.Fneu=app.in.Fneu(:,app.start:app.stop);
-%             
+           
             PostSuite2pStim(app,app.fs,app.correctionFactor,app.order,app.ax,app.ax2);
             
         end
