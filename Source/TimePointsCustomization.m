@@ -12,7 +12,7 @@ plot(mediaF)
 hold on
 
 
-t=[app.tF,app.tL];
+t=[app.tF,app.tD,app.tL];
 
 for i=1:length(t)
     xline(t(i),'--k');
@@ -70,8 +70,9 @@ switch answer
     case 'No'
         try 
             
-            app.tL=t(2); 
+            app.tL=t(2);
             app.tF=t(1);
+            app.tD=app.tF;
         catch
             fprintf('You have to define baseline and end of aplication samples')
             customization(app);
@@ -82,10 +83,10 @@ switch answer
 end
 
 function customization(app)
-        prompt2={'Start of the baseline [sample]:','End of the baseline,drug application [sample]:','End of drug application [sample]:'};
+        prompt2={'Start of the baseline [sample]:','End of the baseline[sample]','Drug application (may be end of baseline)[sample]:','End of drug application [sample]:'};
         nameprompt='Custom';
         numlin=1;
-        defaultansw={'1','10','20'};
+        defaultansw={'1','10','10','20'};
         opts.Resize = 'on';
         opts.WindowStyle= 'normal';
         answ=inputdlg(prompt2,nameprompt,numlin,defaultansw,opts);
@@ -93,11 +94,17 @@ function customization(app)
         app.in.F=app.in.F(:,app.start:app.stop);
         app.in.Fneu=app.in.Fneu(:,app.start:app.stop);
         app.tF=str2double(answ{2})-app.start+1;
-        app.tL=str2double(answ{3})-app.start+1;
+        %tF and tD could be the same if we have a baseline that is immidiately followed by the drug application.
+        %if different, it means that the baseline is disconnected by the
+        %drug application period, and thus we have something in between the
+        %baseline and the drug application we want to ignore
+        app.tD=str2double(answ{3})-app.start+1; 
+        app.tL=str2double(answ{4})-app.start+1;
         app.stop=app.stop-app.start+1;
         app.start=app.start-app.start+1;
         t(1)=app.tF;
-        t(2)=app.tL;
+        t(2)=app.tD;
+        t(3)=app.tL;
     end
         
 

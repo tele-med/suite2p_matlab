@@ -12,13 +12,17 @@ cla(ax2)
 start=app.start;
 stop=app.stop;
 tF=app.tF-start+1;
+tD=app.tD-start+1;
 tL=app.tL-start+1;
+%The dfoverf is the signal calculated as df=(f-f0)/f0, where the f0 value
+%is the mean value of the baseline period. The baseline goes from start to
+%tF, even if we have a disconnected drug application (tF differs from tD).
 dFoverF=deltaFoverF(app.in.iscell,app.in.F,app.in.Fneu,app.correctionFactor,app.order,tF);
 dFoverF=dFoverF(:,start:stop);
 %app.deltaFoF=dFoverF;
 time=app.t;
 interval=zeros(size(time));
-interval(1,tF:tL)=1;
+interval(1,tD:tL)=1;
 
 
 %% divisione in gruppi
@@ -32,11 +36,11 @@ interval(1,tF:tL)=1;
     cutL=app.cutL;
     cutH=app.cutH;
     
-    %prendo solo i frame relativi a un minuto precedente il lavaggio (tL)
+    %prendo solo i frame relativi alla metà precedente il lavaggio (tL)
     %perché così lavoro su un momento in cui il comportamento della cellula
     %si è assestato, dato che ho somministrato il farmaco molto prima e c'è
     %stato il tempo di raggiungere una risposta "definitiva"
-    tHalf=round((tL-tF)/2);
+    tHalf=round((tL-tD)/2); %working on the drug application period, thus starting from tD
     m=mean(dFoverF(:,tL-tHalf:tL)')';  
   
     
@@ -111,8 +115,12 @@ interval(1,tF:tL)=1;
     end
 
     tF=app.tF/fs/60;
+    tD=app.tD/fs/60;
     tL=app.tL/fs/60;
-    xline(tF,'-.',{'Drug appl',round(tF,2)},'Parent',ax);
+    if tD~=tF
+        xline(tF,'-.',{'End of baseline',round(tF,2)},'Parent',ax);
+    end
+    xline(tD,'-.',{'Drug appl',round(tD,2)},'Parent',ax);
     xline(tL,'-.',{'Wash out',round(tL,2)},'Parent',ax);
     xlabel('Time [min]','Parent',ax)
     ylabel('dF/F averaged trace','Parent',ax)

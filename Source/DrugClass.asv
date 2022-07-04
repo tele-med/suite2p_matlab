@@ -247,18 +247,18 @@ classdef DrugClass <handle
             app.buttonDelete=uibutton(p2,'Text','Delete Trace','Position',[2,2,200,20]);
             app.buttonDelete.ButtonPushedFcn = @(src,event)deleteTrace(app);
             
-            buttonVisualizeExc=uibutton(p2,'Text','E','Position',[350,2,20,20]);
+            buttonVisualizeExc=uibutton(p2,'Text','E','Position',[220,2,20,20]);
             buttonVisualizeExc.ButtonPushedFcn = @(src,event)visualizeTrace(app,'E');
             
-            buttonVisualizeInh=uibutton(p2,'Text','I','Position',[380,2,20,20]);
+            buttonVisualizeInh=uibutton(p2,'Text','I','Position',[250,2,20,20]);
             buttonVisualizeInh.ButtonPushedFcn = @(src,event)visualizeTrace(app,'I');
             
-            buttonVisualizeNoR=uibutton(p2,'Text','NR','Position',[410,2,25,20]);
+            buttonVisualizeNoR=uibutton(p2,'Text','NR','Position',[280,2,25,20]);
             buttonVisualizeNoR.ButtonPushedFcn = @(src,event)visualizeTrace(app,'NR');
             
-            app.areaDelete=uitextarea(p2,'Value','idx to delete', 'Position', [220,2,100,20]);
-           
-            %app.areaDelete.ValueChangedFcn= @(areaDelete,event)textEntered(app);
+            app.areaDelete=uitextarea(p2,'Value','idx to delete', 'Position', [320,2,100,20]);
+            buttonDelete=
+            app.areaDelete.ValueChangedFcn= @(areaDelete,event)textEntered(app);
             
           
         end
@@ -319,24 +319,18 @@ classdef DrugClass <handle
     
         function deleteTrace(app)
             
-            
             s2pidx=app.areaDelete.Value; %suite2p index
             s2pidx=str2double(s2pidx);
-            if isnan(s2pidx)==0
-                app.areaDelete.Value='idx to delete';
-                Midx=s2pidx+1;
-            else
-                Midx=app.idx_cell(app.IDX);
-                s2pidx=Midx-1;
-            end
+            app.areaDelete.Value='idx to delete';
             
+            
+            Midx=app.idx_cell(app.IDX);
+            s2pidx=Midx-1;
             app.deleted=[app.deleted,s2pidx];
             app.in.iscell(Midx,1)=0; %cancello la cellula 
             app.idx_cell(app.IDX)=[]; 
             PostSuite2pStim(app,app.fs,app.correctionFactor,app.order,app.ax,app.ax2);
             app.indexesNoResp(Midx)=0;
-            app.indexesExcited(Midx)=0;
-            app.indexesInhibited(Midx)=0;
             h=app.saveButton;
             set(h,'backg',[1 .6 .6]);
             title('All cells dF/F traces','Parent',app.ax2)
