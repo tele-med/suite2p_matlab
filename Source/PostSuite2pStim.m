@@ -42,7 +42,7 @@ interval(1,tD:tL)=1;
     %stato il tempo di raggiungere una risposta "definitiva"
     tHalf=round((tL-tD)/2); %working on the drug application period, thus starting from tD
     m=mean(dFoverF(:,tL-tHalf:tL)')';  
-  
+    idxNaN=find(isnan(m));
     
     try
         nElim=length(app.in.elimDuringCalib); %number of excluded cells
@@ -131,6 +131,7 @@ interval(1,tD:tL)=1;
     ylim(ax,[m M])
     
     %ALL CELLS
+    dFoverF(idxNaN,:)=0;
     LineList = plot(time,dFoverF,'Parent',ax2);
     
     set(LineList, 'ButtonDownFcn', {@myLineCallback, LineList,app});

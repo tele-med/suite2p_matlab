@@ -339,19 +339,17 @@ classdef Calibration <handle
                       obj.idxS=1:1:size(obj.dFoF,1);%all the indexes, because the median approach does not discard any trace
                       obj.idxS(obj.negative)=[];
                 case 'cutWilcoxon'
-                    
-                    if length(obj.indWNS)>=1
-                        slider(obj,obj.indWNS,'NS') %with the slider we just visualize the not selected, as the selected are usually in a high number, so it's not a nice type of visualization (the traces are very flat and small)
                         obj.idxNS=obj.indWNS; %the not selected are the Wilcoxon
                         obj.idxS=obj.indWS;
+                    if length(obj.indWNS)>=1
+                        slider(obj,obj.indWNS,'NS') %with the slider we just visualize the not selected, as the selected are usually in a high number, so it's not a nice type of visualization (the traces are very flat and small)
                     end
                     
                 case 'cutSlope'
-                    
-                    if length(obj.indNSlope)>=1
-                        slider(obj,obj.indNSlope,'NS')
                         obj.idxNS=obj.indNSlope; %the not selected are the Slope
                         obj.idxS=obj.indSlope;
+                    if length(obj.indNSlope)>=1
+                        slider(obj,obj.indNSlope,'NS')     
                     end
             end
            

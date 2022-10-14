@@ -318,25 +318,31 @@ classdef DrugClass <handle
         end
     
         function deleteTrace(app)
-            
-            
+              
             s2pidx=app.areaDelete.Value; %suite2p index
             s2pidx=str2double(s2pidx);
             if isnan(s2pidx)==0
                 app.areaDelete.Value='idx to delete';
                 Midx=s2pidx+1;
+%                 exc=app.idx_cell(app.indexesExcited)-1;
+%                 idx=find(exc==s2pidx);
+%                 matidx=find(app.indexesExcited==1);
+%                 matidx=matidx(idx);
+                
             else
                 Midx=app.idx_cell(app.IDX);
                 s2pidx=Midx-1;
             end
             
             app.deleted=[app.deleted,s2pidx];
-            app.in.iscell(Midx,1)=0; %cancello la cellula 
-            app.idx_cell(app.IDX)=[]; 
+            %app.in.iscell(Midx,1)=0; %cancello la cellula 
+            app.idx_cell(app.IDX)=[];
+            app.in.F(Midx,:)=0;
+            app.in.Fneu(Midx,:)=0;
             PostSuite2pStim(app,app.fs,app.correctionFactor,app.order,app.ax,app.ax2);
-            app.indexesNoResp(Midx)=0;
-            app.indexesExcited(Midx)=0;
-            app.indexesInhibited(Midx)=0;
+            app.indexesNoResp(app.IDX)=0;
+            app.indexesExcited(app.IDX)=0;
+            app.indexesInhibited(app.IDX)=0;
             h=app.saveButton;
             set(h,'backg',[1 .6 .6]);
             title('All cells dF/F traces','Parent',app.ax2)
