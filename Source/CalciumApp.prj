@@ -4,11 +4,11 @@
     <param.icon />
     <param.icons />
     <param.version>1.0</param.version>
-    <param.authnamewatermark />
-    <param.email />
+    <param.authnamewatermark>Oleksandra Fanari</param.authnamewatermark>
+    <param.email>oleksandrafanari@gmail.com</param.email>
     <param.company />
-    <param.summary>Calcium App</param.summary>
-    <param.description>Index problem fixed (now the calibration and division panels have correspondent indexes)</param.description>
+    <param.summary />
+    <param.description />
     <param.screenshot />
     <param.guid />
     <param.installpath.string>\CalciumApp\</param.installpath.string>
@@ -41,16 +41,14 @@
 	 
  Input Arguments 
 	 -?  print help on how to use the application 
-	 input arguments 
- Description 
- 	 Index problem fixed (now the calibration and division panels have correspondent indexes)</param.help.text>
+	 input arguments</param.help.text>
     <unset>
       <param.icon />
       <param.icons />
       <param.version />
-      <param.authnamewatermark />
-      <param.email />
       <param.company />
+      <param.summary />
+      <param.description />
       <param.screenshot />
       <param.guid />
       <param.installpath.string />
